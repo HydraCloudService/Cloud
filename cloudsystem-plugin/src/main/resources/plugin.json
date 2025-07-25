@@ -1,0 +1,6 @@
+{
+  "entrance": "de.hydracloud.plugin.bootstrap.allay.AllayBootstrap",
+  "name": "Cloud",
+  "authors": ["HydraCloudSystem"],
+  "version": "${project.version}"
+}

@@ -1,0 +1,60 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Rebuild with Maven
+        run: mvn clean package
+
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Extract version from pom.xml
+        id: extract_version
+        run: |
+          version=$(xmllint --xpath "string(//project/version)" pom.xml)
+          echo "name=version::${version%-RELEASE}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Reposilite
+        run: mvn deploy -DskipTests=true --batch-mode
+        env:
+          MAVEN_USERNAME: ${{ secrets.REPOSILITE_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.REPOSILITE_PASSWORD }}
+
+      - name: Create tmp directory and copy JAR
+        run: |
+          mkdir tmp
+          cp cloudsystem-loader/target/cloudsystem.jar tmp
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HydraCloud
+          path: tmp
+
+      - name: Upload artifact to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: tmp/**

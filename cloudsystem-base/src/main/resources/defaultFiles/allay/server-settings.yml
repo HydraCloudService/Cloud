@@ -1,0 +1,143 @@
+generic-settings:
+  motd: Default Cloud Service
+  # Usually only visible on the LAN interface
+  sub-motd: https://github.com/HydraCloudSystem
+  max-player-count: 20
+  # Determines the default game type of a world when it is created
+  # Possible values: SURVIVAL, CREATIVE, SPECTATOR
+  default-game-type: SURVIVAL
+  # Determines the default difficulty of a world when it is created
+  # Possible values: PEACEFUL, EASY, NORMAL, HARD
+  default-difficulty: PEACEFUL
+  # Possible values: VISITOR, MEMBER, OPERATOR
+  default-permission: MEMBER
+  # The language used by console
+  language: en_US
+  # Open debug mode
+  # If debug mode is enabled, the console will output more detailed information
+  debug: false
+  is-whitelisted: false
+  # Whether to display the GUI
+  enable-gui: false
+  # Decide the maximum count of threads in compute thread pool
+  # If the value <= 0, the count will be same to the count of available processors
+  max-compute-thread-count: 0
+  # Sentry is an error tracking and performance monitoring platform, which is disabled by
+  # default in development build, however you can force turn it on by setting this to true
+  force-enable-sentry: false
+network-settings:
+  ip: 0.0.0.0
+  ipv6: '::'
+  port: 19132
+  portv6: 19133
+  xbox-auth: false
+  # Turning this on is highly recommended for security reasons
+  enable-network-encryption: true
+  # Possible values: ZLIB, SNAPPY
+  compression-algorithm: ZLIB
+  # 0 == the server will automatically determine the number of netty threads
+  network-thread-number: 0
+  # The maximum number of packets that can be processed at once
+  max-synced-packets-handle-count-once: 128
+  # If set to true, the network thread will be independent of the main world thread
+  # Which will reduce packet processing delay significantly
+  # However, independent network threads will increase CPU usage to a certain extent
+  enable-independent-network-thread: true
+  # Represents the level of resource leak detection.
+  # Possible values: DISABLED, SIMPLE, ADVANCED, PARANOID
+  resource-leak-detector-level: DISABLED
+  # The maximum number of datagram packets each address can send within one RakNet tick (10ms)
+  # Default value is 120 packets, and will be Integer.MAX_VALUE if the server is running in dev mode
+  raknet-packet-limit: 120
+  # A number of all datagrams that will be handled within one RakNet tick before server starts dropping any incoming data
+  # Default value is 100000 (raknetPacketLimit * 0.56 * 1500 different connections), and will be Integer.MAX_VALUE if the server is running in dev mode
+  raknet-global-packet-limit: 100000
+  # The max time (unit: gt) that a client can have in login stage
+  # This would prevent the server from being stuck by a lot
+  # of fake clients that are keep in login stage maliciously
+  # To disable it, just make the value <= 0
+  max-login-time: 1800
+  # Encoding protection will prevent client from sending large garbage data
+  # It is recommended to enable this feature, however if clients are kicked due
+  # to misjudgment (usually when changing skin), disable this feature will help you
+  enable-encoding-protection: true
+world-settings:
+  # Determines how far away from the chunk loader chunks will be ticked
+  tick-radius: 4
+  # Determines how far away from the chunk loader chunks will be loaded and sent
+  view-distance: 8
+  # Determines the maximum number of chunks that can be sent during a tick (per chunk loader)
+  chunk-try-send-count-per-tick: 16
+  use-sub-chunk-sending-system: false
+  # Possible values: ASYNC, SYNC
+  # This only works if sub-chunk sending system is not enabled
+  # And will be forced to SYNC if sub-chunk sending system is enabled
+  chunk-sending-strategy: ASYNC
+  # Determines the minimum number of chunks that must be sent to the client which is joining the server
+  # Decrease this value may reduce the time on joining server. However, client may see a lot of unloaded chunks if the value is too low
+  fully-join-chunk-threshold: 30
+  # Determines how long a chunk without chunk loaders will remain loaded (gt)
+  remove-unneeded-chunk-cycle: 1200
+  # If set to true, the server will load chunks around the spawn point
+  # Which will reduce the time on joining server
+  # However, this will increase the server's memory usage
+  load-spawn-point-chunks: true
+  # Determines how many chunks around the spawn point will be loaded
+  spawn-point-chunk-radius: 3
+  # If set to true, dimensions in the same world will be ticked in parallel during world tick
+  tick-dimension-in-parallel: true
+  # Indicate the max light update count per dimension, if the count is exceeded, light in
+  # newly loaded chunks won't be calculated immediately to avoid taking too much memory
+  max-light-update-count: 1280000
+entity-settings:
+  # Entity physics engine settings
+  # Do not change them if you don't know what you are doing!
+  physics-engine-settings:
+    # Send packets to the client when the amount of position change accumulates
+    # This threshold acts on each axis individually
+    # Increasing this threshold will reduce bandwidth pressure, but may result in untimely motion updates
+    diff-position-threshold: 1.0E-4
+    # Similar to "diffPositionThreshold"
+    diff-rotation-threshold: 0.1
+    # When the motion falls below this value, its motion is zeroed
+    motion-threshold: 0.003
+    # This usually determines how quickly an entity item is moved when getting stuck in a block
+    block-collision-motion: 0.2
+    # Delta move packet will reduce the network pressure if there are a lot of entities
+    use-delta-move-packet: false
+storage-settings:
+  # If set to false, the player's data will not be saved
+  save-player-data: true
+  # Determines the cycle of player data auto saving
+  player-data-auto-save-cycle: 6000
+  # Determines the cycle of chunk auto saving
+  chunk-auto-save-cycle: 6000
+  # Determines the cycle of entity auto saving. When entity auto saving is triggered, the
+  # entity service will find all savable entities in unloaded chunks and save them
+  entity-auto-save-cycle: 1200
+resource-pack-settings:
+  # If set to true, packs will be automatically encrypted
+  # Notes that Vibrant Visuals will be disabled if this is set to true
+  auto-encrypt-packs: true
+  # The maximum size of a resource pack chunk (unit: KB)
+  # Decrease this value may reduce the pressure on the network when sending packs to multiple clients
+  # However, it may also increase the time it takes to send the packs
+  max-chunk-size: 100
+  # true - the player must accept resource packs, otherwise he will not log in to the server
+  # false - the player can log in to the server without accepting resource packs
+  force-resource-packs: false
+  # If set to true, the client resource packs will be allowed
+  allow-client-resource-packs: false
+  # If set to true, all skins will be marked as trusted
+  trust-all-skins: true
+  # If set to true, Vibrant Visuals will be disabled
+  disable-vibrant-visuals: false
+bstats-settings:
+  # bStats (https://bStats.org) collects some basic information for plugin authors, like how
+  # many people use their plugin and their total player count. It's recommended to keep bStats
+  # enabled, but if you're not comfortable with this, you can turn this setting off. There is no
+  # performance penalty associated with having metrics enabled, and data sent to bStats is fully anonymous.
+  enable: false
+  log-failed-requests: false
+  log-sent-data: false
+  log-response-status-text: false

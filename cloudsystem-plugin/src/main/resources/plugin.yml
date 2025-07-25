@@ -1,0 +1,5 @@
+name: Cloud
+api: 2.0.0
+version: "${project.version}"
+author: HydraCloudSystem
+main: de.hydracloud.plugin.bootstrap.waterdogpe.WaterdogBootstrap
