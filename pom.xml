@@ -88,7 +88,7 @@
 
     <distributionManagement>
         <repository>
-            <id>reposilite-server</id>
+            <id>xxplugins-repository</id>
             <url>https://repo.xxplugins.dev/releases</url>
         </repository>
     </distributionManagement>

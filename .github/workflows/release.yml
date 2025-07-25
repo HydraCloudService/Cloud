@@ -37,6 +37,15 @@ jobs:
           version=$(xmllint --xpath "string(//project/version)" pom.xml)
           echo "name=version::${version%-RELEASE}" >> $GITHUB_OUTPUT
 
+      - uses: s4u/maven-settings-action@v2.6.0
+        with:
+          servers: |
+            [{
+              "id": "xxplugins-repository",
+              "username": "${{ secrets.REPOSILITE_USERNAME }}",
+              "password": "${{ secrets.REPOSILITE_PASSWORD }}"
+            }]
+
       - name: Deploy to Reposilite
         run: mvn deploy -DskipTests=true --batch-mode
         env:
