@@ -1,4 +1,3 @@
-[![](https://jitpack.io/v/BedrockCloud/CloudSystem.svg)](https://jitpack.io/#BedrockCloud/CloudSystem)
 # HydraCloud
 This is the HydraCloud project, it is a dynamic Minecraft BedrockEditon cloud management system based on Nio-Networking, it is designed to provide the user with a good and user-friendly experience.
 
