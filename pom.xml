@@ -7,7 +7,7 @@
     <groupId>de.hydracloud</groupId>
     <artifactId>cloudsystem</artifactId>
     <packaging>pom</packaging>
-    <version>${cloud.version}</version>
+    <version>1.0.0-RELEASE</version>
 
     <modules>
         <module>cloudsystem-network</module>
