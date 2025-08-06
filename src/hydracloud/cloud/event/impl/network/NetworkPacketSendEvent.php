@@ -1,0 +1,21 @@
+<?php
+
+namespace hydracloud\cloud\event\impl\network;
+
+use hydracloud\cloud\network\client\ServerClient;
+use hydracloud\cloud\network\packet\CloudPacket;
+
+class NetworkPacketSendEvent extends NetworkEvent {
+
+    public function __construct(
+        CloudPacket $packet,
+        ServerClient $client,
+        private readonly bool $success
+    ) {
+        parent::__construct($packet, $client);
+    }
+
+    public function isSuccess(): bool {
+        return $this->success;
+    }
+}
