@@ -4,7 +4,7 @@ namespace hydracloud\cloud\util;
 
 final class VersionInfo {
 
-    public const VERSION = "2.0.0";
+    public const VERSION = "2.0.1";
     public const DEVELOPERS = ["xxFLORII"];
     public const BETA = false;
 
