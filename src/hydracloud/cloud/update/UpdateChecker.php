@@ -223,7 +223,7 @@ final class UpdateChecker {
                 if (MainConfig::getInstance()->isExecuteUpdates()) {
                     CloudLogger::get()->warn("§bDownloading §rthe newest version...");
                     $downloadNewest = true;
-                } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/WaterdogPE/WaterdogPE/releases/latest§8'§c!");
+                } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/StimoMC/WaterdogPE/releases/latest§8'§c!");
             }
 
             if ($downloadNewest) {
