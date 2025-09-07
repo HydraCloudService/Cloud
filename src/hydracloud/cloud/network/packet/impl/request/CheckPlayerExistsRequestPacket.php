@@ -26,6 +26,15 @@ class CheckPlayerExistsRequestPacket extends RequestPacket {
 
     public function handle(ServerClient $client): void {
         $isPlayer = (CloudPlayerManager::getInstance()->get($this->player) != null);
-        $this->sendResponse(new CheckPlayerExistsResponsePacket($isPlayer), $client);
+        $alreadyConnected = false;
+
+        if (CloudPlayerManager::getInstance()->get($this->player) != null) {
+            if (CloudPlayerManager::getInstance()->get($this->player)->getCurrentServer() != null) {
+                $alreadyConnected = true;
+            }
+        }
+
+        $result = ($isPlayer && !$alreadyConnected);
+        $this->sendResponse(new CheckPlayerExistsResponsePacket($result), $client);
     }
 }
