@@ -101,7 +101,7 @@ final class HydraCloud {
         $this->terminal->start();
 
         CloudLogger::get()->emptyLine()->setUsePrefix(false);
-        CloudLogger::get()->info("  §bHydra§3Cloud §8- §rA cloud system for pocketmine servers with proxy support §8- §b" . VersionInfo::VERSION . (VersionInfo::BETA ? "§c@BETA" : "") . " §8- §rdeveloped by §b" . implode("§8, §b", VersionInfo::DEVELOPERS));
+        CloudLogger::get()->info("  §bHydra§3Cloud §8- §rA cloud system for pocketmine servers with proxy support §8- §b" . VersionInfo::VERSION . (VersionInfo::isBeta() ? "§c@BETA" : "") . " §8- §rdeveloped by §b" . implode("§8, §b", VersionInfo::DEVELOPERS));
         CloudLogger::get()->emptyLine()->setUsePrefix(true);
 
         if (FIRST_RUN) {

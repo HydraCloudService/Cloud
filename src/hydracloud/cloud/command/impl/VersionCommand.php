@@ -16,7 +16,7 @@ final class VersionCommand extends Command {
     public function run(ICommandSender $sender, string $label, array $args): bool {
         $sender->info("§7Version: §b" . VersionInfo::VERSION);
         $sender->info("§7Developers: §b" . implode("§8, §b", VersionInfo::DEVELOPERS));
-        $sender->info("§7isBeta: §a" . (VersionInfo::BETA ? "§cYES" : "§aNO"));
+        $sender->info("§7isBeta: §a" . (VersionInfo::isBeta() ? "§cYES" : "§aNO"));
         return true;
     }
 }

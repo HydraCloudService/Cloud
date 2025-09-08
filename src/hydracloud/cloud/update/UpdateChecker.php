@@ -73,7 +73,7 @@ final class UpdateChecker {
                         $outdated = true;
                         break;
                     } else if (intval($number) > intval($latest[$i])) {
-                        $highVersion = !VersionInfo::BETA;
+                        $highVersion = !VersionInfo::isBeta();
                         break;
                     }
                     $i++;
@@ -118,7 +118,7 @@ final class UpdateChecker {
                 if (isset($phar["plugin.yml"])) {
                     $yaml = yaml_parse($phar["plugin.yml"]->getContent());
                     if (isset($yaml["version"])) {
-                        if ($yaml["version"] !== $data["tag_name"] && !VersionInfo::BETA) {
+                        if ($yaml["version"] !== $data["tag_name"] && !VersionInfo::isBeta()) {
                             CloudLogger::get()->warn("§cYour version of the §bCloudBridge §cis outdated!");
                             if (MainConfig::getInstance()->isExecuteUpdates()) {
                                 CloudLogger::get()->warn("§bDownloading §rthe newest version...");
