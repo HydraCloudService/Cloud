@@ -32,6 +32,7 @@ use hydracloud\cloud\template\TemplateManager;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\FileUtils;
+use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\terminal\TerminalUtils;
 use hydracloud\cloud\util\Utils;
 
@@ -54,27 +55,20 @@ class CloudServer {
         $this->startTime = time();
     }
 
-    public function prepare(): void {
-        if (file_exists($this->getPath()) && !$this->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($this->getPath());
-        FileUtils::copyDirectory($this->getTemplate()->getPath(), $this->getPath());
+    public function prepare(): Promise {
+        $promise = new Promise();
+        CloudLogger::get()->info("§rPreparing the server §b" . $this->getName() . "§r...");
 
-        if ($this->getTemplate()->getTemplateType()->isServer()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $this->getPath() . "plugins/");
-        else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $this->getPath() . "plugins/");
+        ServerPreparator::getInstance()->submitEntry(ServerPrepareEntry::fromServer($this), function() use($promise): void {
+            ServerUtils::copyProperties($this);
+            $promise->resolve(true);
+        });
 
-        if (($group = ServerGroupManager::getInstance()->get($this->getTemplate())) !== null) $group->copyDataTo($this);
-
-        if (file_exists($this->getPath() . "server.log") || file_exists($this->getPath() . "logs/server.log")) {
-            unlink(match ($this->getTemplate()->getTemplateType()) {
-                TemplateType::PROXY() => $this->getPath() . "logs/server.log",
-                default => $this->getPath() . "server.log"
-            });
-        }
-
-        ServerUtils::copyProperties($this);
+        return $promise;
     }
 
     public function start(): void {
-        CloudServerManager::getInstance()->add($this);
+        CloudServerManager::getInstance()->addToProxies($this);
 
         (new ServerStartEvent($this))->call();
         CloudLogger::get()->info("§aStarting §b" . $this->getName() . "§r...");

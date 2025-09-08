@@ -36,6 +36,7 @@ final class CloudServerManager implements Tickable {
     
     /** @var array<CloudServer> */
     private array $servers = [];
+    private float $lastServerStartTime = 0;
 
     public function __construct() {
         self::setInstance($this);
@@ -49,13 +50,19 @@ final class CloudServerManager implements Tickable {
         } else {
             for ($i = 0; $i < $count; $i++) {
                 if (!$this->canStartMore($template)) break;
+
+                if ($this->lastServerStartTime > 0) {
+                    CloudLogger::get()->debug("Time between this and last server start: " . round(microtime(true) - $this->lastServerStartTime, 3) . "s");
+                }
+                $this->lastServerStartTime = microtime(true);
+
                 $id = ServerUtils::getFreeId($template);
                 if ($id !== -1) {
                     $port = ($template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort());
                     if ($port !== 0) {
                         $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
-                        $server->prepare();
-                        $server->start();
+                        $this->add($server);
+                        $server->prepare()->then(fn() => $server->start());
                         $startedServers[] = $server->getName();
                     }
                 }
@@ -148,7 +155,7 @@ final class CloudServerManager implements Tickable {
         return $promise;
     }
 
-    public function add(CloudServer $server): void {
+    public function addToProxies(CloudServer $server): void {
         if (!isset($this->servers[$server->getName()])) $this->servers[$server->getName()] = $server;
         ServerUtils::addId($server->getTemplate(), $server->getId());
         ServerUtils::addPort($server->getCloudServerData()->getPort());
