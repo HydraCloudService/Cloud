@@ -16,7 +16,7 @@ final class SoftwareManager {
     public function __construct() {
         self::setInstance($this);
         $this->register(new Software("PocketMine-MP", MainConfig::getInstance()->getStartCommand("server"), "https://github.com/pmmp/PocketMine-MP/releases/latest/download/PocketMine-MP.phar", "PocketMine-MP.phar", ["pmmp"]));
-        $this->register(new Software("WaterdogPE", MainConfig::getInstance()->getStartCommand("proxy"), "https://github.com/StimoMC/WaterdogPE/releases/download/latest/Waterdog.jar", "Waterdog.jar", ["wdpe"]));
+        $this->register(new Software("WaterdogPE", MainConfig::getInstance()->getStartCommand("proxy"), "https://github.com/WaterdogPE/WaterdogPE/releases/download/latest/Waterdog.jar", "Waterdog.jar", ["wdpe"]));
     }
 
     public function downloadAll(): void {
