@@ -25,6 +25,8 @@ use hydracloud\cloud\player\CloudPlayerManager;
 use hydracloud\cloud\HydraCloud;
 use hydracloud\cloud\server\data\CloudServerData;
 use hydracloud\cloud\server\data\InternalCloudServerStorage;
+use hydracloud\cloud\server\prepare\ServerPreparator;
+use hydracloud\cloud\server\prepare\ServerPrepareEntry;
 use hydracloud\cloud\server\util\ServerStatus;
 use hydracloud\cloud\server\util\ServerUtils;
 use hydracloud\cloud\template\Template;
