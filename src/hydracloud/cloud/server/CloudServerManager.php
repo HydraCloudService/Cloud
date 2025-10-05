@@ -61,7 +61,7 @@ final class CloudServerManager implements Tickable {
                     $port = ($template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort());
                     if ($port !== 0) {
                         $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
-                        $this->add($server);
+                        $this->addToProxies($server);
                         $server->prepare()->then(fn() => $server->start());
                         $startedServers[] = $server->getName();
                     }
