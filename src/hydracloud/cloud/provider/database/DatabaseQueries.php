@@ -34,7 +34,7 @@ final class DatabaseQueries {
     use ParameterEnumTrait;
 
     protected static function init(): void {
-        self::register("createTables", function (): QueryBuilder {
+        self::register("createTables", static function (): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->create([
                     "name" => "VARCHAR(50) PRIMARY KEY",
@@ -68,107 +68,107 @@ final class DatabaseQueries {
                     ]);
         });
 
-        self::register("addTemplate", function (array $data): QueryBuilder {
+        self::register("addTemplate", static function (array $data): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->insert($data);
         });
 
-        self::register("removeTemplate", function (string $name): QueryBuilder {
+        self::register("removeTemplate", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->delete(["name" => $name]);
         });
 
-        self::register("editTemplate", function (string $name, array $newData): QueryBuilder {
+        self::register("editTemplate", static function (string $name, array $newData): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->update($newData, ["name" => $name]);
         });
 
-        self::register("getTemplate", function (string $name): QueryBuilder {
+        self::register("getTemplate", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->get(TemplateHelper::KEYS, ["name" => $name]);
         });
 
-        self::register("checkTemplate", function (string $name): QueryBuilder {
+        self::register("checkTemplate", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->has(["name" => $name]);
         });
 
-        self::register("getTemplates", function (): QueryBuilder {
+        self::register("getTemplates", static function (): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::TEMPLATES)
                 ->select(TemplateHelper::KEYS, "*");
         });
 
-        self::register("addServerGroup", function (array $data): QueryBuilder {
+        self::register("addServerGroup", static function (array $data): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->insert($data);
         });
 
-        self::register("removeServerGroup", function (string $name): QueryBuilder {
+        self::register("removeServerGroup", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->delete(["name" => $name]);
         });
 
-        self::register("editServerGroup", function (string $name, array $newData): QueryBuilder {
+        self::register("editServerGroup", static function (string $name, array $newData): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->update($newData, ["name" => $name]);
         });
 
-        self::register("getServerGroup", function (string $name): QueryBuilder {
+        self::register("getServerGroup", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->get(["name", "templates"], ["name" => $name]);
         });
 
-        self::register("checkServerGroup", function (string $name): QueryBuilder {
+        self::register("checkServerGroup", static function (string $name): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->has(["name" => $name]);
         });
 
-        self::register("getServerGroups", function (): QueryBuilder {
+        self::register("getServerGroups", static function (): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::SERVER_GROUPS)
                 ->select(["name", "templates"], "*");
         });
 
-        self::register("setModuleState", function (string $module, bool $enabled): QueryBuilder {
+        self::register("setModuleState", static function (string $module, bool $enabled): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MODULES)
                 ->update(["enabled" => $enabled], ["module" => $module]);
         });
 
-        self::register("getModuleState", function (string $module): QueryBuilder {
+        self::register("getModuleState", static function (string $module): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MODULES)
                 ->get(["enabled"], ["module" => $module]);
         });
 
-        self::register("enablePlayerNotifications", function (string $player): QueryBuilder {
+        self::register("enablePlayerNotifications", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::NOTIFICATIONS)
                 ->insert(["player" => $player]);
         });
 
-        self::register("disablePlayerNotifications", function (string $player): QueryBuilder {
+        self::register("disablePlayerNotifications", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::NOTIFICATIONS)
                 ->delete(["player" => $player]);
         });
 
-        self::register("hasNotificationsEnabled", function (string $player): QueryBuilder {
+        self::register("hasNotificationsEnabled", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::NOTIFICATIONS)
                 ->has(["player" => $player]);
         });
 
-        self::register("addToWhitelist", function (string $player): QueryBuilder {
+        self::register("addToWhitelist", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MAINTENANCE_LIST)
                 ->insert(["player" => $player]);
         });
 
-        self::register("removeFromWhitelist", function (string $player): QueryBuilder {
+        self::register("removeFromWhitelist", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MAINTENANCE_LIST)
                 ->delete(["player" => $player]);
         });
 
-        self::register("isOnWhitelist", function (string $player): QueryBuilder {
+        self::register("isOnWhitelist", static function (string $player): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MAINTENANCE_LIST)
                 ->has(["player" => $player]);
         });
 
-        self::register("getWhitelist", function (): QueryBuilder {
+        self::register("getWhitelist", static function (): QueryBuilder {
             return QueryBuilder::table(DatabaseTables::MAINTENANCE_LIST)
                 ->select(["player"], "*");
         });

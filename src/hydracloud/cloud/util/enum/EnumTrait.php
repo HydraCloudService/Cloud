@@ -33,7 +33,7 @@ trait EnumTrait {
 
     public static function __callStatic(string $name, array $arguments) {
         self::check();
-        if (isset(self::$members[strtoupper($name)])) return self::$members[strtoupper($name)];
-        return null;
+
+        return self::$members[strtoupper($name)] ?? null;
     }
 }

@@ -31,7 +31,10 @@ readonly class CommandExecutionResult {
     }
 
     public static function fromArray(array $data): ?self {
-        if (!Utils::containKeys($data, "command_line", "messages")) return null;
+        if (!Utils::containKeys($data, "command_line", "messages")) {
+            return null;
+        }
+
         if (is_array($data["messages"])) {
             return new CommandExecutionResult(
                 $data["command_line"],

@@ -8,7 +8,9 @@ final class MaintenanceList {
 
     /** @internal  */
     public static function sync(array $maintenanceList): void {
-        foreach ($maintenanceList as $player) self::$maintenanceList[$player] = true;
+        foreach ($maintenanceList as $player) {
+            self::$maintenanceList[$player] = true;
+        }
     }
 
     public static function add(string $player): void {
@@ -16,7 +18,9 @@ final class MaintenanceList {
     }
 
     public static function remove(string $player): void {
-        if (self::is($player)) unset(self::$maintenanceList[$player]);
+        if (self::is($player)) {
+            unset(self::$maintenanceList[$player]);
+        }
     }
 
     public static function is(string $player): bool {

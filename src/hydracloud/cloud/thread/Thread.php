@@ -15,7 +15,7 @@ abstract class Thread extends NativeThread {
     private ?ClassLoader $classLoader = null;
 
     public function start(int $options = self::INHERIT_NONE): bool {
-        $this->setClassLoader(HydraCloud::getInstance()->getClassLoader());
+        $this->setClassLoader(HydraCloud::getInstance()?->getClassLoader());
         $this->running = true;
         ThreadManager::getInstance()->add($this);
         return parent::start($options);

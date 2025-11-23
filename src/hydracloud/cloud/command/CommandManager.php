@@ -66,7 +66,9 @@ final class CommandManager {
     public function handleInput(ICommandSender $sender, string $input): bool {
         $args = explode(" ", $input);
         $name = array_shift($args);
-        if (($command = $this->get($name)) === null) return false;
+        if (($command = $this->get($name)) === null) {
+            return false;
+        }
 
         $command->handle($sender, $name, $args);
         return true;
@@ -78,7 +80,9 @@ final class CommandManager {
 
     public function remove(Command|string $command): void {
         $command = $command instanceof Command ? $command->getName() : $command;
-        if (isset($this->commands[$command])) unset($this->commands[$command]);
+        if (isset($this->commands[$command])) {
+            unset($this->commands[$command]);
+        }
     }
 
     public function get(string $name): ?Command {

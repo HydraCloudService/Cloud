@@ -61,7 +61,9 @@ abstract class CloudProvider {
     }
 
     public static function current(): self {
-        if (self::$current === null) self::select();
+        if (self::$current === null) {
+            self::select();
+        }
         return self::$current;
     }
 }

@@ -8,7 +8,9 @@ use hydracloud\cloud\command\argument\CommandArgument;
 final readonly class IntegerArgument extends CommandArgument {
 
     public function parseValue(string $input): int {
-        if (is_numeric($input)) return intval($input);
+        if (is_numeric($input)) {
+            return (int)$input;
+        }
         return throw new ArgumentParseException();
     }
 

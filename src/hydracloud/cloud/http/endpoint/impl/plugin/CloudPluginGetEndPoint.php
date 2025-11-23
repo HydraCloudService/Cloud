@@ -20,7 +20,7 @@ final class CloudPluginGetEndPoint extends EndPoint {
             return ["error" => "Plugin wasn't found!"];
         }
 
-        return array_merge($plugin->getDescription()->toArray(), ["enabled" => $plugin->isEnabled()]);
+        return array_merge($plugin->getDescription()->toArray(), ["enabled" => $plugin->enabled]);
     }
 
     public function isBadRequest(Request $request): bool {

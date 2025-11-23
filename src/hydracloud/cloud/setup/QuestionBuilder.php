@@ -61,9 +61,17 @@ final class QuestionBuilder {
     }
 
     public function build(): Question {
-        if ($this->key === null) throw new LogicException("Parameter 'key' cannot be null");
-        if ($this->question === null) throw new LogicException("Parameter 'question' cannot be null");
-        if ($this->parser === null) throw new LogicException("Parameter 'parser' cannot be null");
+        if ($this->key === null) {
+            throw new LogicException("Parameter 'key' cannot be null");
+        }
+
+        if ($this->question === null) {
+            throw new LogicException("Parameter 'question' cannot be null");
+        }
+
+        if ($this->parser === null) {
+            throw new LogicException("Parameter 'parser' cannot be null");
+        }
         return new Question(
             $this->key,
             $this->question,

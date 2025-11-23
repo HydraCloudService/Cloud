@@ -19,9 +19,13 @@ final class ModuleGetEndPoint extends EndPoint {
 
         if (in_array($module, ["sign", "signmodule", "cloudsigns"])) {
             return ["module" => "signModule", "enabled" => InGameModule::getModuleState(InGameModule::SIGN_MODULE)];
-        } else if (in_array($module, ["npc", "npcmodule", "cloudnpcs"])) {
+        }
+
+        if (in_array($module, ["npc", "npcmodule", "cloudnpcs"])) {
             return ["module" => "npcModule", "enabled" => InGameModule::getModuleState(InGameModule::NPC_MODULE)];
-        } else if (in_array($module, ["hub", "hubcommand", "hubcommandmodule"])) {
+        }
+
+        if (in_array($module, ["hub", "hubcommand", "hubcommandmodule"])) {
             return ["module" => "hubCommandModule", "enabled" => InGameModule::getModuleState(InGameModule::HUB_COMMAND_MODULE)];
         }
 

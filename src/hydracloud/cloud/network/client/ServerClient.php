@@ -13,13 +13,17 @@ use ReflectionClass;
 
 final class ServerClient {
 
-    private array $delayedPackets = [];
+    public array $delayedPackets = [] {
+        get {
+            return $this->delayedPackets;
+        }
+    }
 
     public function __construct(private readonly Address $address) {}
 
     public function sendPacket(CloudPacket $packet): bool {
-        if (!Network::getInstance()->sendPacket($packet, $this)) {
-            CloudLogger::get()->debug("Failed to send packet " . (new ReflectionClass($packet))->getShortName() . " to " . $this->address);
+        if (!Network::getInstance()?->sendPacket($packet, $this)) {
+            CloudLogger::get()->debug("Failed to send packet " . new ReflectionClass($packet)->getShortName() . " to " . $this->address);
             return false;
         }
         return true;
@@ -40,11 +44,10 @@ final class ServerClient {
      * @return void
      */
     public function sendDelayedPacket(CloudPacket $packet, int $ticks, ?Closure $onSend = null): void {
-        $this->delayedPackets[] = [$packet, HydraCloud::getInstance()->getTick() + $ticks, $onSend];
-    }
+        $delayedPackets = $this->delayedPackets;
+        $delayedPackets[] = [$packet, HydraCloud::getInstance()->tick + $ticks, $onSend];
 
-    public function getDelayedPackets(): array {
-        return $this->delayedPackets;
+        $this->delayedPackets = $delayedPackets;
     }
 
     public function getAddress(): Address {

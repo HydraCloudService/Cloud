@@ -9,7 +9,11 @@ use hydracloud\cloud\server\util\ServerStatus;
 
 final class CloudServerStatusChangePacket extends CloudPacket {
 
-    public function __construct(private ?ServerStatus $newStatus = null) {}
+    public function __construct(private ?ServerStatus $newStatus = null {
+        get {
+            return $this->newStatus;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->writeServerStatus($this->newStatus);
@@ -17,10 +21,6 @@ final class CloudServerStatusChangePacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->newStatus = $packetData->readServerStatus();
-    }
-
-    public function getNewStatus(): ?ServerStatus {
-        return $this->newStatus;
     }
 
     public function handle(ServerClient $client): void {

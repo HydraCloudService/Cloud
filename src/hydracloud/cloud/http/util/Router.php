@@ -7,15 +7,16 @@ use hydracloud\cloud\http\io\Request;
 use hydracloud\cloud\http\io\Response;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\SingletonTrait;
+use JsonException;
 
 final class Router {
     use SingletonTrait;
 
-    public const GET = "GET";
-    public const POST = "POST";
-    public const PUT = "PUT";
-    public const PATCH = "PATCH";
-    public const DELETE = "DELETE";
+    public const string GET = "GET";
+    public const string POST = "POST";
+    public const string PUT = "PUT";
+    public const string PATCH = "PATCH";
+    public const string DELETE = "DELETE";
 
     /** @var array<string, array<string, Closure>> $routes */
     protected array $routes = [];
@@ -48,10 +49,16 @@ final class Router {
         $this->add(self::DELETE, $path, $closure);
     }
 
+    /**
+     * @throws JsonException
+     */
     public function isRegistered(Request $request): bool {
         return (bool) $this->pickRoute($request->data()->method(), $request->data()->path());
     }
 
+    /**
+     * @throws JsonException
+     */
     public function execute(Request $request): Response {
         $response = new Response();
         $d = $this->pickRoute($request->data()->method(), $request->data()->path());
@@ -60,14 +67,19 @@ final class Router {
             CloudLogger::get()->debug("Choosing route " . $expectedPath . " for " . $request->data()->method() . " HTTP request to proceed, received from " . $request->data()->address());
             HttpUtils::fillRequest($request, $expectedPath);
             $closure($request, $response);
-            CloudLogger::get()->debug("Successfully handled " . $request->data()->method() . " HTTP request, sending " . $response->getStatusCode() . " (" . ($response->getCustomResponseCodeMessage() ?? (StatusCodes::RESPOND_CODES[$response->getStatusCode()] ?? "Unknown")) . ") response to " . $request->data()->address() . "...");
+            CloudLogger::get()->debug("Successfully handled " . $request->data()->method() . " HTTP request, sending " . $response->statusCode . " (" . ($response->customResponseCodeMessage ?? (StatusCodes::RESPOND_CODES[$response->statusCode] ?? "Unknown")) . ") response to " . $request->data()->address() . "...");
         }
         return $response;
     }
 
+    /**
+     * @throws JsonException
+     */
     public function pickRoute(string $method, string $path): ?array {
         foreach ($this->routes[$method] ?? [] as $expectedPath => $closure) {
-            if (HttpUtils::matchPath($expectedPath, $path)) return [$expectedPath, $closure];
+            if (HttpUtils::matchPath($expectedPath, $path)) {
+                return [$expectedPath, $closure];
+            }
         }
         return null;
     }

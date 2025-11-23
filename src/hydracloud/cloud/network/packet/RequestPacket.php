@@ -7,7 +7,11 @@ use hydracloud\cloud\network\packet\data\PacketData;
 
 abstract class RequestPacket extends CloudPacket {
 
-    private string $requestId = "";
+    private string $requestId = "" {
+        get {
+            return $this->requestId;
+        }
+    }
 
     final public function encode(PacketData $packetData): void {
         parent::encode($packetData);
@@ -23,7 +27,4 @@ abstract class RequestPacket extends CloudPacket {
         $client->sendPacket($packet->setRequestId($this->requestId));
     }
 
-    public function getRequestId(): string {
-        return $this->requestId;
-    }
 }

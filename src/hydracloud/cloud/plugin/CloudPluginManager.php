@@ -41,7 +41,7 @@ final class CloudPluginManager implements Tickable {
             $this->load($path);
         }
 
-        if (count($this->plugins) == 0) {
+        if (count($this->plugins) === 0) {
             CloudLogger::get()->info("No plugins were loaded.");
         } else {
             CloudLogger::get()->success("Successfully loaded §b" . count($this->plugins) . " plugin" . (count($this->plugins) == 1 ? "" : "s") . "§r.");
@@ -64,7 +64,7 @@ final class CloudPluginManager implements Tickable {
                         return;
                     }
 
-                    (new PluginLoadEvent($plugin))->call();
+                    new PluginLoadEvent($plugin)->call();
                     $this->plugins[$plugin->getDescription()->getName()] = $plugin;
                     $plugin->onLoad();
                 }
@@ -88,8 +88,8 @@ final class CloudPluginManager implements Tickable {
 
     public function enable(CloudPlugin $plugin): void {
         CloudLogger::get()->info("Enabling §b" . $plugin->getDescription()->getName() . "§r...");
-        $plugin->setEnabled(true);
-        (new PluginEnableEvent($plugin))->call();
+        $plugin->enabled = true;
+        new PluginEnableEvent($plugin)->call();
         try {
             $plugin->onEnable();
         } catch (Throwable $throwable) {
@@ -97,7 +97,7 @@ final class CloudPluginManager implements Tickable {
             $this->disable($plugin);
         }
 
-        if ($plugin->isEnabled()) {
+        if ($plugin->enabled) {
             $this->enabledPlugins[$plugin->getDescription()->getName()] = $plugin;
         }
     }
@@ -112,13 +112,15 @@ final class CloudPluginManager implements Tickable {
 
     public function disable(CloudPlugin $plugin): void {
         CloudLogger::get()->info("Disabling §b" . $plugin->getDescription()->getName() . "§r...");
-        (new PluginDisableEvent($plugin))->call();
-        $plugin->setEnabled(false);
+        new PluginDisableEvent($plugin)->call();
+        $plugin->enabled = false;
         $plugin->onDisable();
 
-        $plugin->getScheduler()->cancelAll();
+        $plugin->scheduler->cancelAll();
         EventManager::getInstance()->removeHandlers($plugin);
-        if (isset($this->enabledPlugins[$plugin->getDescription()->getName()])) unset($this->enabledPlugins[$plugin->getDescription()->getName()]);
+        if (isset($this->enabledPlugins[$plugin->getDescription()->getName()])) {
+            unset($this->enabledPlugins[$plugin->getDescription()->getName()]);
+        }
     }
 
     public function clear(): void {
@@ -128,8 +130,8 @@ final class CloudPluginManager implements Tickable {
 
     public function tick(int $currentTick): void {
         foreach ($this->enabledPlugins as $enabledPlugin) {
-            if ($enabledPlugin->isEnabled()) {
-                $enabledPlugin->getScheduler()->tick($currentTick);
+            if ($enabledPlugin->enabled) {
+                $enabledPlugin->scheduler->tick($currentTick);
             }
         }
     }

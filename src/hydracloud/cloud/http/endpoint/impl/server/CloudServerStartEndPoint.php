@@ -18,7 +18,9 @@ final class CloudServerStartEndPoint extends EndPoint {
     public function handleRequest(Request $request, Response $response): array {
         $name = $request->data()->queries()->get("template");
         $count = 1;
-        if ($request->data()->queries()->has("count")) if (is_numeric($request->data()->queries()->get("count"))) if (intval($request->data()->queries()->get("count")) > 0) $count = intval($request->data()->queries()->get("count"));
+        if ($request->data()->queries()->has("count") && is_numeric($request->data()->queries()->get("count")) && (int)$request->data()->queries()->get("count") > 0) {
+            $count = (int)$request->data()->queries()->get("count");
+        }
         $template = TemplateManager::getInstance()->get($name);
 
         if ($template === null) {
@@ -30,7 +32,7 @@ final class CloudServerStartEndPoint extends EndPoint {
         }
 
         CloudServerManager::getInstance()->start($template, $count);
-        return ["success" => "Successfully trying to start " . $count . " server" . ($count == 1 ? "" : "s") . "!"];
+        return ["success" => "Successfully trying to start " . $count . " server" . ($count === 1 ? "" : "s") . "!"];
     }
 
     public function isBadRequest(Request $request): bool {

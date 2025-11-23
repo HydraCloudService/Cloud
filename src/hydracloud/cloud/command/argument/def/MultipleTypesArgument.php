@@ -37,7 +37,7 @@ final readonly class MultipleTypesArgument extends CommandArgument {
     }
 
     public function getType(): string {
-        return implode("|", array_map(fn(CommandArgument $argument) => $argument->getName(), $this->allowedTypes));
+        return implode("|", array_map(static fn(CommandArgument $argument) => $argument->getName(), $this->allowedTypes));
     }
 
     public function getAllowedTypes(): array {

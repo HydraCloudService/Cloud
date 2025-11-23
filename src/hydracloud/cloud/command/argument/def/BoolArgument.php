@@ -7,8 +7,7 @@ use hydracloud\cloud\command\argument\CommandArgument;
 final readonly class BoolArgument extends CommandArgument {
 
     public function parseValue(string $input): bool {
-        if (strtolower($input) == "true" || strtolower($input) == "yes") return true;
-        return false;
+        return strtolower($input) === "true" || strtolower($input) === "yes";
     }
 
     public function getType(): string {

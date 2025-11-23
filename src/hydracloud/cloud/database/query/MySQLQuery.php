@@ -14,8 +14,16 @@ use Throwable;
 abstract class MySQLQuery extends ThreadSafe {
 
     private mixed $result = null;
-    private bool $crashed = false;
-    private ?string $exception = null;
+    public bool $crashed = false {
+        get {
+            return $this->crashed;
+        }
+    }
+    public ?string $exception = null {
+        get {
+            return $this->exception;
+        }
+    }
     private bool $resultSerialized = false;
 
     public function run(Connection $connection): void {
@@ -43,24 +51,20 @@ abstract class MySQLQuery extends ThreadSafe {
     }
 
     public function execute(?Closure $syncClosure = null): void {
-        ConnectionPool::getInstance()->addQuery($this, $syncClosure);
-    }
-
-    public function isCrashed(): bool {
-        return $this->crashed;
-    }
-
-    public function getException(): ?string {
-        return $this->exception;
+        ConnectionPool::getInstance()?->addQuery($this, $syncClosure);
     }
 
     public function isSerializable(mixed $var): bool {
         if (is_resource($var)) {
             return false;
-        } elseif (is_object($var)) {
+        }
+
+        if (is_object($var)) {
             if ($var instanceof Closure) {
                 return false;
-            } elseif (!$var instanceof Serializable && !$var instanceof ArrayAccess) {
+            }
+
+            if (!$var instanceof Serializable && !$var instanceof ArrayAccess) {
                 return false;
             }
         }

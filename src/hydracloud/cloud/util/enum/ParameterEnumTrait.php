@@ -26,7 +26,11 @@ trait ParameterEnumTrait {
 
     public static function __callStatic(string $name, array $arguments) {
         self::check();
-        if (isset(self::$members[strtoupper($name)])) return (self::$members[strtoupper($name)])(...$arguments);
+
+        if (isset(self::$members[strtoupper($name)])) {
+            return (self::$members[strtoupper($name)])(...$arguments);
+        }
+
         return null;
     }
 }

@@ -28,7 +28,10 @@ final class PropertiesConfigType implements ConfigType {
     public function encodeContent(array $content): string {
         $result = "";
         foreach ($content as $k => $v) {
-            if (is_bool($v)) $v = $v ? "on" : "off";
+            if (is_bool($v)) {
+                $v = $v ? "on" : "off";
+            }
+
             $result .= $k . "=" . $v . "\r\n";
         }
 

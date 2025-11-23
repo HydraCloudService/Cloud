@@ -28,12 +28,8 @@ final class PlayerDisconnectPacket extends CloudPacket {
         if (($player = CloudPlayerManager::getInstance()->get($this->playerName)) !== null) {
             if ($player->getCurrentProxy() === null) {
                 CloudPlayerManager::getInstance()->remove($player);
-            } else {
-                if (($server = ServerClientCache::getInstance()->getServer($client)) !== null) {
-                    if ($server->getTemplate()->getTemplateType()->isProxy()) {
-                        CloudPlayerManager::getInstance()->remove($player);
-                    }
-                }
+            } else if ((($server = ServerClientCache::getInstance()->getServer($client)) !== null) && $server->getTemplate()->getTemplateType()->isProxy()) {
+                CloudPlayerManager::getInstance()->remove($player);
             }
         }
     }

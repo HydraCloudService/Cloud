@@ -58,19 +58,19 @@ final class WebAccountCommand extends Command {
         }
 
         $subCommand = $args["action"];
-        if ($subCommand == "list") {
+        if ($subCommand === "list") {
             $sender->info("Accounts §8(§e" . count($accounts = WebAccountManager::getInstance()->getAll()) . "§8)§r:");
             if (empty($accounts)) $sender->info("§cNo accounts available.");
             foreach ($accounts as $account) {
                 $sender->info(
                     "§e" . $account->getName() .
-                    " §8- §risInitialPassword: §c" . ($account->isInitialPassword() ? "Yes" : "§aNo") .
-                    " §8- §rRole: §b" . ($account->getRole()->roleName() == "default" ? "Default" : "§cAdmin")
+                    " §8- §risInitialPassword: §c" . ($account->initialPassword ? "Yes" : "§aNo") .
+                    " §8- §rRole: §b" . ($account->role->roleName() === "default" ? "Default" : "§cAdmin")
                 );
             }
-        } else if ($subCommand == "create") {
+        } else if ($subCommand === "create") {
             if (count($args) < 2) {
-                (new WebAccountSetup())->startSetup();
+                new WebAccountSetup()->startSetup();
                 return true;
             }
 
@@ -82,8 +82,10 @@ final class WebAccountCommand extends Command {
 
             WebAccountManager::getInstance()->create(new WebAccount($name, password_hash($initPassword = Utils::generateString(6), PASSWORD_BCRYPT), true, WebAccountRoles::DEFAULT));
             $sender->success("Successfully §acreated §rthe web account §b" . $name . " §rwith the role §bdefault§r. §8(§rInitial Password: §b" . $initPassword . "§8)");
-        } else if ($subCommand == "remove") {
-            if (count($args) < 2) return false;
+        } else if ($subCommand === "remove") {
+            if (count($args) < 2) {
+                return false;
+            }
 
             $account = $args["name"];
             if (!$account instanceof WebAccount) {
@@ -93,7 +95,7 @@ final class WebAccountCommand extends Command {
 
             WebAccountManager::getInstance()->remove($account);
             $sender->success("Successfully §cremoved §rthe web account §b" . $account->getName() . "§r.");
-        } else if ($subCommand == "update") {
+        } else if ($subCommand === "update") {
             if (count($args) < 4) {
                 return false;
             }
@@ -107,14 +109,16 @@ final class WebAccountCommand extends Command {
             $action = $args["update_action"];
             $value = $args["value"];
 
-            if ($action == "password") {
+            if ($action === "password") {
                 WebAccountManager::getInstance()->update($account, password_hash($value, PASSWORD_BCRYPT), null);
                 $sender->success("Successfully §aupdated §rthe §bweb account§r.");
-            } else if ($action == "role") {
+            } else if ($action === "role") {
                 if (($role = WebAccountRoles::get($value)) !== null) {
                     WebAccountManager::getInstance()->update($account, null, $role);
                     $sender->success("Successfully §aupdated §rthe role of the §bweb account§r.");
-                } else $sender->warn("The web role does not exist!");
+                } else {
+                    $sender->warn("The web role does not exist!");
+                }
             } else {
                 return false;
             }

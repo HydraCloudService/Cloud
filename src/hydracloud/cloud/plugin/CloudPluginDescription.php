@@ -50,7 +50,10 @@ readonly class CloudPluginDescription {
     }
 
     public static function fromArray(array $description): ?self {
-        if (!Utils::containKeys($description, "name", "main", "version")) return null;
+        if (!Utils::containKeys($description, "name", "main", "version")) {
+            return null;
+        }
+
         return new CloudPluginDescription(
             $description["name"],
             $description["main"],

@@ -12,7 +12,11 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 abstract class Command {
 
     /** @var array<CommandArgument> */
-    private array $parameters = [];
+    private array $parameters = [] {
+        get {
+            return $this->parameters;
+        }
+    }
 
     public function __construct(
         private readonly string $name,
@@ -28,7 +32,7 @@ abstract class Command {
         }
 
         $parsedArgs = [];
-        for ($i = 0; $i < count($this->parameters); $i++) {
+        for ($i = 0, $iMax = count($this->parameters); $i < $iMax; $i++) {
             $currentParameter = $this->parameters[$i];
             $multiString = $currentParameter instanceof StringArgument && $currentParameter->isMultiString();
             if (isset($args[$i])) {
@@ -71,11 +75,10 @@ abstract class Command {
     }
 
     public function addParameter(CommandArgument $argument): void {
-        $this->parameters[] = $argument;
-    }
+        $parameters = $this->parameters;
+        $parameters[] = $argument;
 
-    public function getParameters(): array {
-        return $this->parameters;
+        $this->parameters = $parameters;
     }
 
     public function getName(): string {

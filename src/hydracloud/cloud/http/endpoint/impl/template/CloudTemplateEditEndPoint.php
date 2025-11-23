@@ -46,12 +46,13 @@ final class CloudTemplateEditEndPoint extends EndPoint {
 
     public function isBadRequest(Request $request): bool {
         $atLeastOne = false;
-        foreach (TemplateHelper::EDITABLE_KEYS as $key) if ($request->data()->queries()->has($key)) {
-            $atLeastOne = true;
-            break;
+        foreach (TemplateHelper::EDITABLE_KEYS as $key) {
+            if ($request->data()->queries()->has($key)) {
+                $atLeastOne = true;
+                break;
+            }
         }
 
-        if ($request->data()->queries()->has("name") && $atLeastOne) return false;
-        return true;
+        return !($request->data()->queries()->has("name") && $atLeastOne);
     }
 }

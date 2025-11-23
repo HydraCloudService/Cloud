@@ -10,8 +10,16 @@ use hydracloud\cloud\server\CloudServer;
 final class ServerSyncPacket extends CloudPacket {
 
     public function __construct(
-        private ?CloudServer $server = null,
-        private bool $removal = false
+        private ?CloudServer $server = null {
+            get {
+                return $this->server;
+            }
+        },
+        private bool $removal = false {
+            get {
+                return $this->removal;
+            }
+        }
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -22,14 +30,6 @@ final class ServerSyncPacket extends CloudPacket {
     public function decodePayload(PacketData $packetData): void {
         $this->server = $packetData->readServer();
         $this->removal = $packetData->readBool();
-    }
-
-    public function getServer(): ?CloudServer {
-        return $this->server;
-    }
-
-    public function isRemoval(): bool {
-        return $this->removal;
     }
 
     public function handle(ServerClient $client): void {}

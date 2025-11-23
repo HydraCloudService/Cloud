@@ -10,7 +10,11 @@ use hydracloud\cloud\util\promise\Promise;
 
 final class CommandSendAnswerPacket extends CloudPacket {
 
-    public function __construct(private ?CommandExecutionResult $result = null) {}
+    public function __construct(private ?CommandExecutionResult $result = null {
+        get {
+            return $this->result;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->writeCommandExecutionResult($this->result);
@@ -18,10 +22,6 @@ final class CommandSendAnswerPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->result = $packetData->readCommandExecutionResult();
-    }
-
-    public function getResult(): ?CommandExecutionResult {
-        return $this->result;
     }
 
     public function handle(ServerClient $client): void {

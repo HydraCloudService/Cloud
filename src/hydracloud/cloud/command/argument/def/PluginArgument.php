@@ -10,7 +10,9 @@ use hydracloud\cloud\plugin\CloudPluginManager;
 final readonly class PluginArgument extends CommandArgument {
 
     public function parseValue(string $input): CloudPlugin {
-        if (($plugin = CloudPluginManager::getInstance()->get($input)) !== null) return $plugin;
+        if (($plugin = CloudPluginManager::getInstance()->get($input)) !== null) {
+            return $plugin;
+        }
         throw new ArgumentParseException();
     }
 

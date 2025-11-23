@@ -10,7 +10,11 @@ use hydracloud\cloud\provider\CloudProvider;
 
 final class CheckPlayerNotifyRequestPacket extends RequestPacket {
 
-    public function __construct(private string $player = "") {}
+    public function __construct(private string $player = "" {
+        get {
+            return $this->player;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->player);
@@ -18,10 +22,6 @@ final class CheckPlayerNotifyRequestPacket extends RequestPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->player = $packetData->readString();
-    }
-
-    public function getPlayer(): string {
-        return $this->player;
     }
 
     public function handle(ServerClient $client): void {

@@ -52,7 +52,6 @@ final class CloudPlayerTextEndPoint extends EndPoint {
     }
 
     public function isBadRequest(Request $request): bool {
-        if ($request->data()->queries()->has("identifier") && $request->data()->queries()->has("text_type") && $request->data()->queries()->has("text")) return false;
-        return true;
+        return !($request->data()->queries()->has("identifier") && $request->data()->queries()->has("text_type") && $request->data()->queries()->has("text"));
     }
 }

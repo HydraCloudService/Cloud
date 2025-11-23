@@ -22,13 +22,21 @@ class ServerPrepareEntry extends ThreadSafe {
         $serverPath = TEMP_PATH . $this->server . "/";
         $templatePath = TEMPLATES_PATH . $this->template . "/";
 
-        if (file_exists($serverPath) && !$this->static) FileUtils::removeDirectory($serverPath);
+        if (file_exists($serverPath) && !$this->static) {
+            FileUtils::removeDirectory($serverPath);
+        }
+
         FileUtils::copyDirectory($templatePath, $serverPath);
 
-        if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/");
-        else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
+        if ($this->templateType === TemplateType::SERVER()->getName()) {
+            FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/");
+        } else {
+            FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
+        }
 
-        if ($this->group !== null) FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
+        if ($this->group !== null) {
+            FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
+        }
 
         if (file_exists($serverPath . "server.log") || file_exists($serverPath . "logs/server.log")) {
             unlink(match ($this->templateType) {
@@ -73,7 +81,7 @@ class ServerPrepareEntry extends ThreadSafe {
             $server->getName(),
             $server->getTemplateName(),
             ServerGroupManager::getInstance()->get($server->getTemplate())?->getName(),
-            $server->getTemplate()->getSettings()->isStatic(),
+            $server->getTemplate()->getSettings()->static,
             $server->getTemplate()->getTemplateType()->getName()
         );
     }

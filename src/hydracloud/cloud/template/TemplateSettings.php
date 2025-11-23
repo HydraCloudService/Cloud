@@ -7,79 +7,71 @@ use hydracloud\cloud\util\Utils;
 final class TemplateSettings {
 
     public function __construct(
-        private bool $lobby,
-        private bool $maintenance,
-        private bool $static,
-        private int $maxPlayerCount,
-        private int $minServerCount,
-        private int $maxServerCount,
-        private float $startNewPercentage,
-        private bool $autoStart
+        public bool   $lobby {
+            get {
+                return $this->lobby;
+            }
+            set {
+                $this->lobby = $value;
+            }
+        },
+        public bool   $maintenance {
+            get {
+                return $this->maintenance;
+            }
+            set {
+                $this->maintenance = $value;
+            }
+        },
+        public bool   $static {
+            get {
+                return $this->static;
+            }
+            set {
+                $this->static = $value;
+            }
+        },
+        public int    $maxPlayerCount {
+            get {
+                return $this->maxPlayerCount;
+            }
+            set {
+                $this->maxPlayerCount = $value;
+            }
+        },
+        public int   $minServerCount {
+            get {
+                return $this->minServerCount;
+            }
+            set {
+                $this->minServerCount = $value;
+            }
+        },
+        public int   $maxServerCount {
+            get {
+                return $this->maxServerCount;
+            }
+            set {
+                $this->maxServerCount = $value;
+            }
+        },
+        public float $startNewPercentage {
+            get {
+                return $this->startNewPercentage;
+            }
+            set {
+                $this->startNewPercentage = $value;
+            }
+        },
+        public bool $autoStart {
+            get {
+                return $this->autoStart;
+            }
+            set {
+                $this->autoStart = $value;
+            }
+        }
     ) {}
-
-    public function setLobby(bool $lobby): void {
-        $this->lobby = $lobby;
-    }
-
-    public function setMaintenance(bool $maintenance): void {
-        $this->maintenance = $maintenance;
-    }
-
-    public function setStatic(bool $static): void {
-        $this->static = $static;
-    }
-
-    public function setMaxPlayerCount(int $maxPlayerCount): void {
-        $this->maxPlayerCount = $maxPlayerCount;
-    }
-
-    public function setMinServerCount(int $minServerCount): void {
-        $this->minServerCount = $minServerCount;
-    }
-
-    public function setMaxServerCount(int $maxServerCount): void {
-        $this->maxServerCount = $maxServerCount;
-    }
-
-    public function setStartNewPercentage(float $startNewPercentage): void {
-        $this->startNewPercentage = $startNewPercentage;
-    }
-
-    public function setAutoStart(bool $autoStart): void {
-        $this->autoStart = $autoStart;
-    }
-
-    public function isLobby(): bool {
-        return $this->lobby;
-    }
-
-    public function isMaintenance(): bool {
-        return $this->maintenance;
-    }
-
-    public function isStatic(): bool {
-        return $this->static;
-    }
-
-    public function getMaxPlayerCount(): int {
-        return $this->maxPlayerCount;
-    }
-
-    public function getMinServerCount(): int {
-        return $this->minServerCount;
-    }
-
-    public function getMaxServerCount(): int {
-        return $this->maxServerCount;
-    }
-
-    public function getStartNewPercentage(): float {
-        return $this->startNewPercentage;
-    }
-
-    public function isAutoStart(): bool {
-        return $this->autoStart;
-    }
 
     public function toArray(): array {
         return [
@@ -99,7 +91,10 @@ final class TemplateSettings {
     }
 
     public static function fromArray(array $data): ?self {
-        if (!Utils::containKeys($data, "lobby", "maintenance", "maxPlayerCount", "minServerCount", "maxServerCount", "autoStart")) return null;
+        if (!Utils::containKeys($data, "lobby", "maintenance", "maxPlayerCount", "minServerCount", "maxServerCount", "autoStart")) {
+            return null;
+        }
+
         return self::create(...$data);
     }
 }

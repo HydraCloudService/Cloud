@@ -8,7 +8,11 @@ use hydracloud\cloud\network\packet\ResponsePacket;
 
 final class CloudServerStopResponsePacket extends ResponsePacket {
 
-    public function __construct(private ?ErrorReason $errorReason = null) {}
+    public function __construct(private ?ErrorReason $errorReason = null {
+        get {
+            return $this->errorReason;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->writeErrorReason($this->errorReason);
@@ -16,10 +20,6 @@ final class CloudServerStopResponsePacket extends ResponsePacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->errorReason = $packetData->readErrorReason();
-    }
-
-    public function getErrorReason(): ?ErrorReason {
-        return $this->errorReason;
     }
 
     public static function create(ErrorReason $errorReason): self {

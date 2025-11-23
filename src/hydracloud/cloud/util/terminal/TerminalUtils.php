@@ -9,7 +9,9 @@ final class TerminalUtils {
     }
 
     public static function kill(int $pid, bool $subprocesses = true): void {
-        if ($subprocesses) $pid = -$pid;
+        if ($subprocesses) {
+            $pid = -$pid;
+        }
 
         if (function_exists("posix_kill")) {
             posix_kill($pid, 9);

@@ -12,7 +12,9 @@ final class TickableList {
     }
 
     public static function remove(Tickable $tickable): void {
-        if (isset(self::$list[spl_object_id($tickable)])) unset(self::$list[spl_object_id($tickable)]);
+        if (isset(self::$list[spl_object_id($tickable)])) {
+            unset(self::$list[spl_object_id($tickable)]);
+        }
     }
 
     public static function tick(int $currentTick): void {

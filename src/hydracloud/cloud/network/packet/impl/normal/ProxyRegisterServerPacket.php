@@ -9,8 +9,16 @@ use hydracloud\cloud\network\packet\data\PacketData;
 final class ProxyRegisterServerPacket extends CloudPacket {
 
     public function __construct(
-        private string $serverName = "",
-        private int $port = 0
+        private string $serverName = "" {
+            get {
+                return $this->serverName;
+            }
+        },
+        private int $port = 0 {
+            get {
+                return $this->port;
+            }
+        }
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -21,14 +29,6 @@ final class ProxyRegisterServerPacket extends CloudPacket {
     public function decodePayload(PacketData $packetData): void {
         $this->serverName = $packetData->readString();
         $this->port = $packetData->readInt();
-    }
-
-    public function getServerName(): string {
-        return $this->serverName;
-    }
-
-    public function getPort(): int {
-        return $this->port;
     }
 
     public function handle(ServerClient $client): void {}

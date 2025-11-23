@@ -47,7 +47,9 @@ final class MySQLThread extends Thread {
 
         while (true) {
             $this->synchronized(function(): void {
-                if ($this->isRunning() && $this->queries->count() == 0 && $this->doneQueries->count() == 0) $this->wait();
+                if ($this->isRunning() && $this->queries->count() === 0 && $this->doneQueries->count() === 0) {
+                    $this->wait();
+                }
             });
 
             /** @var MySQLQuery $query */

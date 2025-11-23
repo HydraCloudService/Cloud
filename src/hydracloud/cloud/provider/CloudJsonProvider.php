@@ -9,14 +9,35 @@ use hydracloud\cloud\cache\InGameModule;
 use hydracloud\cloud\group\ServerGroup;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\util\promise\Promise;
+use JsonException;
 
 final class CloudJsonProvider extends CloudProvider {
 
-    private Config $templatesConfig;
-    private Config $serverGroupsConfig;
-    private Config $modulesConfig;
-    private Config $notificationsList;
-    private Config $maintenanceList;
+    private Config $templatesConfig {
+        get {
+            return $this->templatesConfig;
+        }
+    }
+    private Config $serverGroupsConfig {
+        get {
+            return $this->serverGroupsConfig;
+        }
+    }
+    private Config $modulesConfig {
+        get {
+            return $this->modulesConfig;
+        }
+    }
+    private Config $notificationsList {
+        get {
+            return $this->notificationsList;
+        }
+    }
+    private Config $maintenanceList {
+        get {
+            return $this->maintenanceList;
+        }
+    }
 
     public function __construct() {
         $this->templatesConfig = new Config(TEMPLATES_PATH . "templates.json", ConfigTypes::JSON());
@@ -26,7 +47,9 @@ final class CloudJsonProvider extends CloudProvider {
         $this->maintenanceList = new Config(IN_GAME_PATH . "maintenanceList.json", ConfigTypes::JSON());
 
         foreach ($this->maintenanceList->getAll() as $player => $enabled) {
-            if ($enabled) MaintenanceList::add($player);
+            if ($enabled) {
+                MaintenanceList::add($player);
+            }
         }
 
         foreach ($this->modulesConfig->getAll() as $player => $enabled) {
@@ -55,7 +78,9 @@ final class CloudJsonProvider extends CloudProvider {
         $data = $this->templatesConfig->get($template);
         if (($template = Template::fromArray($data)) !== null) {
             $promise->resolve($template);
-        } else $promise->reject();
+        } else {
+            $promise->reject();
+        }
 
         return $promise;
     }
@@ -72,13 +97,18 @@ final class CloudJsonProvider extends CloudProvider {
         $templates = [];
         $data = $this->templatesConfig->getAll();
         foreach ($data as $template) {
-            if (($template = Template::fromArray($template)) !== null) $templates[$template->getName()] = $template;
+            if (($template = Template::fromArray($template)) !== null) {
+                $templates[$template->getName()] = $template;
+            }
         }
 
         $promise->resolve($templates);
         return $promise;
     }
 
+    /**
+     * @throws JsonException
+     */
     public function addServerGroup(ServerGroup $serverGroup): void {
         $this->serverGroupsConfig->set($serverGroup->getName(), $serverGroup->toArray());
         $this->serverGroupsConfig->save();
@@ -100,7 +130,9 @@ final class CloudJsonProvider extends CloudProvider {
         $data = $this->serverGroupsConfig->get($serverGroup);
         if (($serverGroup = ServerGroup::fromArray($data)) !== null) {
             $promise->resolve($serverGroup);
-        } else $promise->reject();
+        } else {
+            $promise->reject();
+        }
 
         return $promise;
     }
@@ -117,7 +149,9 @@ final class CloudJsonProvider extends CloudProvider {
         $serverGroups = [];
         $data = $this->serverGroupsConfig->getAll();
         foreach ($data as $serverGroup) {
-            if (($serverGroup = ServerGroup::fromArray($serverGroup)) !== null) $serverGroups[$serverGroup->getName()] = $serverGroup;
+            if (($serverGroup = ServerGroup::fromArray($serverGroup)) !== null) {
+                $serverGroups[$serverGroup->getName()] = $serverGroup;
+            }
         }
 
         $promise->resolve($serverGroups);
@@ -174,25 +208,5 @@ final class CloudJsonProvider extends CloudProvider {
         $promise = new Promise();
         $promise->resolve(array_filter($this->maintenanceList->getAll(true), fn(string $user) => $this->maintenanceList->get($user, false)));
         return $promise;
-    }
-
-    public function getTemplatesConfig(): ?Config {
-        return $this->templatesConfig;
-    }
-
-    public function getServerGroupsConfig(): Config {
-        return $this->serverGroupsConfig;
-    }
-
-    public function getModulesConfig(): Config {
-        return $this->modulesConfig;
-    }
-
-    public function getNotificationsList(): Config {
-        return $this->notificationsList;
-    }
-
-    public function getMaintenanceList(): Config {
-        return $this->maintenanceList;
     }
 }

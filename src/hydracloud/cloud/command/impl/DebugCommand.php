@@ -14,15 +14,15 @@ final class DebugCommand extends Command {
     }
 
     public function run(ICommandSender $sender, string $label, array $args): bool {
-        if (MainConfig::getInstance()->isDebugMode()) {
+        if (MainConfig::getInstance()->debugMode) {
             $sender->success("The §edebug mode §rhas been §cdisabled§r!");
-            MainConfig::getInstance()->setDebugMode(false);
+            MainConfig::getInstance()->debugMode = false;
         } else {
             $sender->success("The §edebug mode §rhas been §aenabled§r!");
-            MainConfig::getInstance()->setDebugMode(true);
+            MainConfig::getInstance()->debugMode = true;
         }
 
-        ExceptionHandler::tryCatch(fn() => MainConfig::getInstance()->save(), "Failed to save main config");
+        ExceptionHandler::tryCatch(static fn() => MainConfig::getInstance()->save(), "Failed to save main config");
         return true;
     }
 }

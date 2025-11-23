@@ -18,7 +18,9 @@ final class ExitCommand extends Command {
     }
 
     public function run(ICommandSender $sender, string $label, array $args): bool {
-        if ($args["confirmation"]) HydraCloud::getInstance()->shutdown();
+        if ($args["confirmation"]) {
+            HydraCloud::getInstance()?->shutdown();
+        }
         return true;
     }
 }

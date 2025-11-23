@@ -13,11 +13,16 @@ use hydracloud\cloud\provider\migration\MigrationList;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\promise\Promise;
+use JsonException;
 use Throwable;
 
 final class CloudMySqlProvider extends CloudProvider {
 
-    private ?ConnectionPool $connectionPool;
+    private ?ConnectionPool $connectionPool {
+        get {
+            return $this->connectionPool;
+        }
+    }
 
     public function __construct() {
         $this->connectionPool = new ConnectionPool([
@@ -26,7 +31,7 @@ final class CloudMySqlProvider extends CloudProvider {
             "password" => MainConfig::getInstance()->getMySqlPassword(),
             "database" => MainConfig::getInstance()->getMySqlDatabase(),
             "port" => MainConfig::getInstance()->getMySqlPort()
-        ], 1, HydraCloud::getInstance()->getSleeperHandler(), function (Throwable $throwable): void {
+        ], 1, HydraCloud::getInstance()->sleeperHandler, function (Throwable $throwable): void {
             CloudLogger::get()->error("Something unexpected happened while executing a mysql query...");
             CloudLogger::get()->exception($throwable);
         });
@@ -68,7 +73,9 @@ final class CloudMySqlProvider extends CloudProvider {
 
                 if (($template = Template::fromArray($result)) !== null) {
                     $promise->resolve($template);
-                } else $promise->reject();
+                } else {
+                    $promise->reject();
+                }
             });
 
         return $promise;
@@ -106,6 +113,9 @@ final class CloudMySqlProvider extends CloudProvider {
         return $promise;
     }
 
+    /**
+     * @throws JsonException
+     */
     public function addServerGroup(ServerGroup $serverGroup): void {
         DatabaseQueries::addServerGroup($serverGroup->toArray(true))->execute();
     }
@@ -114,8 +124,14 @@ final class CloudMySqlProvider extends CloudProvider {
         DatabaseQueries::removeServerGroup($serverGroup->getName())->execute();
     }
 
+    /**
+     * @throws JsonException
+     */
     public function editServerGroup(ServerGroup $serverGroup, array $newData): void {
-        if (is_array($newData["templates"])) $newData["templates"] = json_encode($newData["templates"]);
+        if (is_array($newData["templates"])) {
+            $newData["templates"] = json_encode($newData["templates"], JSON_THROW_ON_ERROR);
+        }
+
         DatabaseQueries::editServerGroup($serverGroup->getName(), $newData)->execute();
     }
 
@@ -131,7 +147,9 @@ final class CloudMySqlProvider extends CloudProvider {
 
                 if (($serverGroup = ServerGroup::fromArray($result)) !== null) {
                     $promise->resolve($serverGroup);
-                } else $promise->reject();
+                } else {
+                    $promise->reject();
+                }
             });
 
         return $promise;
@@ -178,7 +196,7 @@ final class CloudMySqlProvider extends CloudProvider {
         $promise = new Promise();
 
         DatabaseQueries::getModuleState($module)
-            ->execute(fn(array $result) => $promise->resolve($result["enabled"] == 1));
+            ->execute(fn(array $result) => $promise->resolve($result["enabled"] === 1));
 
         return $promise;
     }
@@ -223,12 +241,9 @@ final class CloudMySqlProvider extends CloudProvider {
         $promise = new Promise();
 
         DatabaseQueries::getWhitelist()
-            ->execute(fn(?array $list) => $promise->resolve($list === null ? [] : array_map(fn(array $r) => $r["player"], $list)));
+            ->execute(fn(?array $list) => $promise->resolve($list === null ? [] : array_map(static fn(array $r) => $r["player"], $list)));
 
         return $promise;
     }
 
-    public function getConnectionPool(): ?ConnectionPool {
-        return $this->connectionPool;
-    }
 }

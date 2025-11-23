@@ -32,7 +32,7 @@ final class StopCommand extends Command {
     public function run(ICommandSender $sender, string $label, array $args): bool {
         $object = $args["object"];
 
-        if (!($object == "all" ? CloudServerManager::getInstance()->stopAll() : CloudServerManager::getInstance()->stop($object))) {
+        if (!($object === "all" ? CloudServerManager::getInstance()->stopAll() : CloudServerManager::getInstance()->stop($object))) {
             $sender->warn("The server was not found!");
         }
         return true;

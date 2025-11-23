@@ -10,7 +10,9 @@ use hydracloud\cloud\player\CloudPlayerManager;
 final readonly class PlayerArgument extends CommandArgument {
 
     public function parseValue(string $input): CloudPlayer {
-        if (($player = CloudPlayerManager::getInstance()->get($input)) !== null) return $player;
+        if (($player = CloudPlayerManager::getInstance()->get($input)) !== null) {
+            return $player;
+        }
         throw new ArgumentParseException();
     }
 

@@ -11,10 +11,20 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 final class ConsoleTextPacket extends CloudPacket {
 
     public function __construct(
-        private string $text = "",
-        private ?LogType $logType = null
+        private string $text = "" {
+            get {
+                return $this->text;
+            }
+        },
+        private ?LogType $logType = null {
+            get {
+                return $this->logType;
+            }
+        }
     ) {
-        if ($this->logType === null) $this->logType = LogType::INFO();
+        if ($this->logType === null) {
+            $this->logType = LogType::INFO();
+        }
     }
 
     public function encodePayload(PacketData $packetData): void {
@@ -27,20 +37,18 @@ final class ConsoleTextPacket extends CloudPacket {
         $this->logType = $packetData->readLogType();
     }
 
-    public function getText(): string {
-        return $this->text;
-    }
-
-    public function getLogType(): ?LogType {
-        return $this->logType;
-    }
-
     public function handle(ServerClient $client): void {
-        if ($this->logType === LogType::INFO()) CloudLogger::get()->info($this->text);
-        else if ($this->logType === LogType::DEBUG()) CloudLogger::get()->debug($this->text, true);
-        else if ($this->logType === LogType::WARN()) CloudLogger::get()->warn($this->text);
-        else if ($this->logType === LogType::ERROR()) CloudLogger::get()->error($this->text);
-        else if ($this->logType === LogType::SUCCESS()) CloudLogger::get()->success($this->text);
+        if ($this->logType === LogType::INFO()) {
+            CloudLogger::get()->info($this->text);
+        } else if ($this->logType === LogType::DEBUG()) {
+            CloudLogger::get()->debug($this->text, true);
+        } else if ($this->logType === LogType::WARN()) {
+            CloudLogger::get()->warn($this->text);
+        } else if ($this->logType === LogType::ERROR()) {
+            CloudLogger::get()->error($this->text);
+        } else if ($this->logType === LogType::SUCCESS()) {
+            CloudLogger::get()->success($this->text);
+        }
     }
 
     public static function create(string $text = "", ?LogType $logType = null): self {

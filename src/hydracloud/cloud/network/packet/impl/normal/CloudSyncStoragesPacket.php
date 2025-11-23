@@ -10,12 +10,19 @@ use hydracloud\cloud\server\CloudServerManager;
 //sending to the sub servers
 final class CloudSyncStoragesPacket extends CloudPacket {
 
-    private array $storage = [];
+    private array $storage = [] {
+        get {
+            return $this->storage;
+        }
+    }
 
     public function __construct() {
         foreach (CloudServerManager::getInstance()->getAll() as $server) {
             if (!$server->getInternalCloudServerStorage()->empty()) {
-                $this->storage[$server->getName()] = $server->getInternalCloudServerStorage()->getAll();
+                $storage = $this->storage;
+                $storage[$server->getName()] = $server->getInternalCloudServerStorage()->getAll();
+
+                $this->storage = $storage;
             }
         }
     }
@@ -26,10 +33,6 @@ final class CloudSyncStoragesPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->storage = $packetData->readArray();
-    }
-
-    public function getStorage(): array {
-        return $this->storage;
     }
 
     public function handle(ServerClient $client): void {}

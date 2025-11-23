@@ -21,13 +21,13 @@ final class CloudServerListEndPoint extends EndPoint {
 
         if ($template === null) {
             return array_values(array_map(fn(CloudServer $cloudServer) => $cloudServer->getName(), CloudServerManager::getInstance()->getAll()));
-        } else {
-            if (($template = TemplateManager::getInstance()->get($template)) !== null) {
-                return array_values(array_map(fn(CloudServer $cloudServer) => $cloudServer->getName(), CloudServerManager::getInstance()->getAll($template)));
-            } else {
-                return ["error" => "The template doesn't exists!"];
-            }
         }
+
+        if (($template = TemplateManager::getInstance()->get($template)) !== null) {
+            return array_values(array_map(static fn(CloudServer $cloudServer) => $cloudServer->getName(), CloudServerManager::getInstance()->getAll($template)));
+        }
+
+        return ["error" => "The template doesn't exists!"];
     }
 
     public function isBadRequest(Request $request): bool {

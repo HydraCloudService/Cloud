@@ -48,20 +48,26 @@ final class GroupCommand extends Command {
 
         switch ($action) {
             case "create": {
-                if (count($args) < 2) return false;
+                if (count($args) < 2) {
+                    return false;
+                }
                 if ($name instanceof ServerGroup) {
                     $sender->warn("A server group with that name already exists.");
                     return true;
                 }
 
                 $defTemplates = [];
-                if ($template instanceof Template) $defTemplates = [$template->getName()];
+                if ($template instanceof Template) {
+                    $defTemplates = [$template->getName()];
+                }
 
                 ServerGroupManager::getInstance()->create(new ServerGroup($name, $defTemplates));
                 break;
             }
             case "remove": {
-                if (count($args) < 2) return false;
+                if (count($args) < 2) {
+                    return false;
+                }
                 if (!$name instanceof ServerGroup) {
                     $sender->warn("A server group with that name does not exists.");
                     return true;
@@ -71,7 +77,9 @@ final class GroupCommand extends Command {
                 break;
             }
             case "addtemplate": {
-                if (count($args) < 3) return false;
+                if (count($args) < 3) {
+                    return false;
+                }
                 if (!$name instanceof ServerGroup) {
                     $sender->warn("A server group with that name does not exists.");
                     return true;
@@ -86,7 +94,9 @@ final class GroupCommand extends Command {
                 break;
             }
             case "removetemplate": {
-                if (count($args) < 3) return false;
+                if (count($args) < 3) {
+                    return false;
+                }
                 if (!$name instanceof ServerGroup) {
                     $sender->warn("A server group with that name does not exists.");
                     return true;
@@ -102,10 +112,12 @@ final class GroupCommand extends Command {
             }
             case "list": {
                 $sender->info("ServerGroups §8(§b" . count($groups = ServerGroupManager::getInstance()->getAll()) . "§8)§r:");
-                if (empty($groups)) $sender->info("§c/");
+                if (empty($groups)) {
+                    $sender->info("§c/");
+                }
                 foreach ($groups as $group) {
                     $sender->info("§b" . $group->getName() .
-                        " §8- §rTemplates: §b" . (empty($group->getTemplates()) ? "§c/" : implode("§8, §b", $group->getTemplates()))
+                        " §8- §rTemplates: §b" . (empty($group->templates) ? "§c/" : implode("§8, §b", $group->templates))
                     );
                 }
                 break;

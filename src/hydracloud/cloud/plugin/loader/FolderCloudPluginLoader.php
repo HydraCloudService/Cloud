@@ -16,14 +16,23 @@ final class FolderCloudPluginLoader implements CloudPluginLoader {
     public function loadPlugin(string $path): string|CloudPlugin {
         $pluginYml = yaml_parse(file_get_contents($path . "/plugin.yml"));
         CloudLogger::get()->debug("Parsing plugin.yml... (" . $path . ")");
-        if (!is_array($pluginYml)) return "Can't parse plugin.yml";
+
+        if (!is_array($pluginYml)) {
+            return "Can't parse plugin.yml";
+        }
+
         $pluginYml = CloudPluginDescription::fromArray($pluginYml);
-        if ($pluginYml === null) return "Incorrect plugin.yml";
+        if ($pluginYml === null) {
+            return "Incorrect plugin.yml";
+        }
 
         CloudLogger::get()->debug("Adding plugin to class loader (" . $path . ")");
         HydraCloud::getInstance()->getClassLoader()->addPath("", $path . "/src");
         $plugin = new ($pluginYml->getMain())($pluginYml);
-        if (!is_subclass_of($plugin, CloudPlugin::class)) return "Is not a valid CloudPlugin";
+        if (!is_subclass_of($plugin, CloudPlugin::class)) {
+            return "Is not a valid CloudPlugin";
+        }
+
         return $plugin;
     }
 }

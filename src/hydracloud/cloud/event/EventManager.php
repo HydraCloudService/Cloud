@@ -6,6 +6,7 @@ use Closure;
 use hydracloud\cloud\plugin\CloudPlugin;
 use hydracloud\cloud\util\SingletonTrait;
 use ReflectionClass;
+use ReflectionException;
 
 final class EventManager {
     use SingletonTrait;
@@ -17,21 +18,30 @@ final class EventManager {
     }
 
     public function register(string $eventClass, Closure $closure, CloudPlugin $plugin): void {
-        if (is_subclass_of($eventClass, Event::class)) $this->handlers[$plugin->getDescription()->getFullName()][$eventClass][] = $closure;
+        if (is_subclass_of($eventClass, Event::class)) {
+            $this->handlers[$plugin->getDescription()->getFullName()][$eventClass][] = $closure;
+        }
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function registerListener(Listener $listener, CloudPlugin $plugin): void {
         $reflection = new ReflectionClass($listener);
         foreach ($reflection->getMethods() as $method) {
-            if (!$method->isAbstract() && !$method->isStatic() && $method->isPublic() && $method->getNumberOfParameters() == 1) {
-                $event = $method->getParameters()[0]->getType()->getName();
-                if (is_subclass_of($event, Event::class)) $this->handlers[$plugin->getDescription()->getFullName()][$event][] = $method->getClosure($listener);
+            if (!$method->isAbstract() && !$method->isStatic() && $method->isPublic() && $method->getNumberOfParameters() === 1) {
+                $event = $method->getParameters()[0]->getType()?->getName();
+                if (is_subclass_of($event, Event::class)) {
+                    $this->handlers[$plugin->getDescription()->getFullName()][$event][] = $method->getClosure($listener);
+                }
             }
         }
     }
 
     public function removeHandlers(CloudPlugin $plugin): void {
-        if (isset($this->handlers[$plugin->getDescription()->getFullName()])) unset($this->handlers[$plugin->getDescription()->getFullName()]);
+        if (isset($this->handlers[$plugin->getDescription()->getFullName()])) {
+            unset($this->handlers[$plugin->getDescription()->getFullName()]);
+        }
     }
 
     public function removeAll(): void {

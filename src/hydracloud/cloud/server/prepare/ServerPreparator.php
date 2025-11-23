@@ -23,19 +23,23 @@ class ServerPreparator {
             for ($i = 0; $i < $count; $i++) {
                 $thread = new ServerPrepareThread();
 
-                $sleeperHandlerEntry = HydraCloud::getInstance()->getSleeperHandler()->addNotifier(
+                $sleeperHandlerEntry = HydraCloud::getInstance()->sleeperHandler->addNotifier(
                     function () use ($thread, $i): void {
                         /** @var ServerPrepareEntry $entry */
-                        while (($entry = $thread->getFinishedPreparations()->shift()) !== null) {
+                        while (($entry = $thread->finishedPreparations->shift()) !== null) {
                             $id = spl_object_id($entry);
                             [$completionHandler] = $this->completionHandlers[$id];
-                            if ($completionHandler !== null) ($completionHandler)();
+
+                            if ($completionHandler !== null) {
+                                ($completionHandler)();
+                            }
+
                             unset($this->completionHandlers[$id]);
                         }
                     }
                 );
 
-                $thread->setSleeperHandlerEntry($sleeperHandlerEntry);
+                $thread->sleeperHandlerEntry = $sleeperHandlerEntry;
                 $thread->start();
                 $this->threads[] = $thread;
             }
@@ -46,7 +50,11 @@ class ServerPreparator {
         CloudLogger::get()->debug("Preparing server (" . $entry->getServer() . "): §b" . ($this->isAsync() ? "async" : "sync"));
         if (!$this->isAsync()) {
             $entry->run();
-            if ($completionHandler !== null) ($completionHandler)();
+
+            if ($completionHandler !== null) {
+                ($completionHandler)();
+            }
+
             return;
         }
 
@@ -58,7 +66,7 @@ class ServerPreparator {
         $threads = $this->threads;
         usort(
             $threads,
-            static fn(ServerPrepareThread $a, ServerPrepareThread $b) => $a->getPrepareQueue()->count() <=> $b->getPrepareQueue()->count()
+            static fn(ServerPrepareThread $a, ServerPrepareThread $b) => $a->prepareQueue->count() <=> $b->prepareQueue->count()
         );
         return $threads[0];
     }

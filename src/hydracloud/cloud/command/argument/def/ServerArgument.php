@@ -10,7 +10,9 @@ use hydracloud\cloud\server\CloudServerManager;
 final readonly class ServerArgument extends CommandArgument {
 
     public function parseValue(string $input): CloudServer {
-        if (($server = CloudServerManager::getInstance()->get($input)) !== null) return $server;
+        if (($server = CloudServerManager::getInstance()->get($input)) !== null) {
+            return $server;
+        }
         throw new ArgumentParseException();
     }
 

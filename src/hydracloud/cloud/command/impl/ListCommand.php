@@ -27,37 +27,43 @@ final class ListCommand extends Command {
     public function run(ICommandSender $sender, string $label, array $args): bool {
         $type = $args["type"] ?? "servers";
 
-        if ($type == "templates") {
+        if ($type === "templates") {
             $sender->info("Templates §8(§b" . count(TemplateManager::getInstance()->getAll()) . "§8)§r:");
-            if (empty(TemplateManager::getInstance()->getAll())) $sender->info("§c/");
+            if (empty(TemplateManager::getInstance()->getAll())) {
+                $sender->info("§c/");
+            }
             foreach (TemplateManager::getInstance()->getAll() as $template) {
                 $sender->info(
                     "§b" . $template->getName() .
-                    " §8- §risLobby: §a" . ($template->getSettings()->isLobby() ? "§aYes" : "§cNo") .
-                    " §8- §risMaintenance: §a" . ($template->getSettings()->isMaintenance() ? "§aYes" : "§cNo") .
-                    " §8- §risStatic: §a" . ($template->getSettings()->isStatic() ? "§aYes" : "§cNo") .
-                    " §8- §rMinServerCount: §b" . $template->getSettings()->getMinServerCount() .
-                    " §8- §rMaxServerCount: §b" . $template->getSettings()->getMaxServerCount() .
-                    " §8- §rStartNewPercentage: §b" . $template->getSettings()->getStartNewPercentage() . "%" .
-                    " §8- §risAutoStart: §a" . ($template->getSettings()->isAutoStart() ? "§aYes" : "§cNo") .
+                    " §8- §risLobby: §a" . ($template->getSettings()->lobby ? "§aYes" : "§cNo") .
+                    " §8- §risMaintenance: §a" . ($template->getSettings()->maintenance ? "§aYes" : "§cNo") .
+                    " §8- §risStatic: §a" . ($template->getSettings()->static ? "§aYes" : "§cNo") .
+                    " §8- §rMinServerCount: §b" . $template->getSettings()->minServerCount .
+                    " §8- §rMaxServerCount: §b" . $template->getSettings()->maxServerCount .
+                    " §8- §rStartNewPercentage: §b" . $template->getSettings()->startNewPercentage . "%" .
+                    " §8- §risAutoStart: §a" . ($template->getSettings()->autoStart ? "§aYes" : "§cNo") .
                     " §8- §rType: §b" . ($template->getTemplateType() === TemplateType::SERVER() ? "§bSERVER" : "§cPROXY")
                 );
             }
-        } else if ($type == "servers") {
+        } else if ($type === "servers") {
             $sender->info("Servers §8(§b" . count(CloudServerManager::getInstance()->getAll()) . "§8)§r:");
-            if (empty(CloudServerManager::getInstance()->getAll())) $sender->info("§c/");
+            if (empty(CloudServerManager::getInstance()->getAll())) {
+                $sender->info("§c/");
+            }
             foreach (CloudServerManager::getInstance()->getAll() as $server) {
                 $sender->info(
                     "§b" . $server->getName() .
                     " §8- §rPort: §b" . $server->getCloudServerData()->getPort() . " §8| §rIPv6: §b" . $server->getCloudServerData()->getPort()+1 .
                     " §8- §rTemplate: §b" . $server->getTemplate()->getName() .
-                    " §8- §rPlayers: §b" . count($server->getCloudPlayers()) . "§8/§b" . $server->getTemplate()->getSettings()->getMaxPlayerCount() . " §8(§b" . $server->getCloudServerData()->getMaxPlayers() . "§8)" .
+                    " §8- §rPlayers: §b" . count($server->getCloudPlayers()) . "§8/§b" . $server->getTemplate()->getSettings()->maxPlayerCount . " §8(§b" . $server->getCloudServerData()->maxPlayers . "§8)" .
                     " §8- §rStatus: §b" . $server->getServerStatus()->getDisplay()
                 );
             }
-        } else if ($type == "players") {
+        } else if ($type === "players") {
             $sender->info("Players §8(§b" . count(CloudPlayerManager::getInstance()->getAll()) . "§8)§r:");
-            if (empty(CloudPlayerManager::getInstance()->getAll())) $sender->info("§c/");
+            if (empty(CloudPlayerManager::getInstance()->getAll())) {
+                $sender->info("§c/");
+            }
             foreach (CloudPlayerManager::getInstance()->getAll() as $player) {
                 $sender->info(
                     "§b" . $player->getName() .
@@ -68,7 +74,7 @@ final class ListCommand extends Command {
                     " §8- §rProxy: §b" . ($player->getCurrentProxy() === null ? "§cNo proxy." : $player->getCurrentProxy()->getName())
                 );
             }
-        } else if ($type == "modules") {
+        } else if ($type === "modules") {
             $sender->info("Modules §8(§b" . count(InGameModule::getAll()) . "§8)§r:");
             foreach (InGameModule::getAll() as $module) {
                 $sender->info(

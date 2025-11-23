@@ -75,32 +75,53 @@ final class PacketData implements JsonSerializable {
 
     public function readString(): ?string {
         $read = $this->read();
-        if ($read === null) return null;
+        if ($read === null) {
+            return null;
+        }
         return (string) $read;
     }
 
     public function readInt(): ?int {
         $read = $this->read();
-        if ($read === null) return null;
-        return intval($read);
+
+        if ($read === null) {
+            return null;
+        }
+
+        return (int)$read;
     }
 
     public function readFloat(): ?float {
         $read = $this->read();
-        if ($read === null) return null;
-        return floatval($read);
+
+        if ($read === null) {
+            return null;
+        }
+
+        return (float)$read;
     }
 
     public function readBool(): ?bool {
         $read = $this->read();
-        if ($read === null) return null;
-        return boolval($read);
+
+        if ($read === null) {
+            return null;
+        }
+
+        return (bool)$read;
     }
 
     public function readArray(): ?array {
         $read = $this->read();
-        if ($read === null) return null;
-        if (is_array($read)) return $read;
+
+        if ($read === null) {
+            return null;
+        }
+
+        if (is_array($read)) {
+            return $read;
+        }
+
         return [];
     }
 

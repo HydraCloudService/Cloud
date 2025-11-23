@@ -32,15 +32,19 @@ final class CreateCommand extends Command {
     public function run(ICommandSender $sender, string $label, array $args): bool {
         $name = $args["name"] ?? null;
         if ($name === null) {
-            (new TemplateSetup())->startSetup();
+            new TemplateSetup()->startSetup();
             return true;
-        } else {
-            if (!TemplateManager::getInstance()->check($name)) {
-                $templateType = TemplateType::SERVER();
-                if (isset($args["type"])) $templateType = TemplateType::get($args["type"]) ?? TemplateType::SERVER();
+        }
 
-                TemplateManager::getInstance()->create(Template::create($name, TemplateSettings::create(false, true, false, 20, 0, 2, 100, false), $templateType));
-            } else $sender->error("The template already exists!");
+        if (!TemplateManager::getInstance()->check($name)) {
+            $templateType = TemplateType::SERVER();
+            if (isset($args["type"])) {
+                $templateType = TemplateType::get($args["type"]) ?? TemplateType::SERVER();
+            }
+
+            TemplateManager::getInstance()->create(Template::create($name, TemplateSettings::create(false, true, false, 20, 0, 2, 100, false), $templateType));
+        } else {
+            $sender->error("The template already exists!");
         }
         return true;
     }

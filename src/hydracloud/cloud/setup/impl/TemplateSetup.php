@@ -14,7 +14,7 @@ use hydracloud\cloud\terminal\log\logger\Logger;
 final class TemplateSetup extends Setup {
 
     public function onStart(Logger $logger): void {
-        $this->setPrefix("§bTemplate-Setup");
+        $this->prefix = "§bTemplate-Setup";
         $logger->info("Welcome to the Template-Setup!");
     }
 
@@ -28,35 +28,38 @@ final class TemplateSetup extends Setup {
                 ->key("name")
                 ->question("What's the name of your template?")
                 ->parser(function(string $input): ?string {
-                    if (TemplateManager::getInstance()->check($input)) return null;
+                    if (TemplateManager::getInstance()->check($input)) {
+                        return null;
+                    }
+
                     return $input;
                 })
             ->build(),
             QuestionBuilder::builder()
                 ->key("lobby")
                 ->question("Is your template a lobby?")
-                ->parser(fn(string $input) => strtolower($input) == "yes")
+                ->parser(fn(string $input) => strtolower($input) === "yes")
                 ->canSkipped(true)
                 ->possibleAnswers("yes", "no")
             ->build(),
             QuestionBuilder::builder()
                 ->key("maintenance")
                 ->question("Should your template be in maintenance?")
-                ->parser(fn(string $input) => strtolower($input) == "yes")
+                ->parser(fn(string $input) => strtolower($input) === "yes")
                 ->canSkipped(true)
                 ->possibleAnswers("yes", "no")
             ->build(),
             QuestionBuilder::builder()
                 ->key("static")
                 ->question("Should your template be static?")
-                ->parser(fn(string $input) => strtolower($input) == "yes")
+                ->parser(fn(string $input) => strtolower($input) === "yes")
                 ->canSkipped(true)
                 ->possibleAnswers("yes", "no")
             ->build(),
             QuestionBuilder::builder()
                 ->key("autoStart")
                 ->question("Should your template start servers automatically?")
-                ->parser(fn(string $input) => strtolower($input) == "yes")
+                ->parser(fn(string $input) => strtolower($input) === "yes")
                 ->canSkipped(true)
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
@@ -64,8 +67,10 @@ final class TemplateSetup extends Setup {
             QuestionBuilder::builder()
                 ->key("startNewPercentage")
                 ->question("How many players are required to start a new server? (in %, 0-100, 0 = none)")
-                ->parser(function(string $input): ?string {
-                    if (is_numeric($input) && ($val = floatval($input)) >= 0 && $val <= 100) return floatval($input);
+                ->parser(function(mixed $input): ?string {
+                    if (is_numeric($input) && ($val = (float)$input) >= 0 && $val <= 100) {
+                        return (float)$input;
+                    }
                     return null;
                 })
                 ->canSkipped(true)
@@ -74,34 +79,43 @@ final class TemplateSetup extends Setup {
             QuestionBuilder::builder()
                 ->key("maxPlayerCount")
                 ->question("How many players are allowed on that template?")
-                ->parser(function(string $input): ?int {
-                    if (!is_numeric($input)) return null;
-                    return intval($input);
+                ->parser(function(mixed $input): ?int {
+                    if (!is_numeric($input)) {
+                        return null;
+                    }
+
+                    return (int)$input;
                 })
                 ->canSkipped(true)
             ->build(),
             QuestionBuilder::builder()
                 ->key("minServerCount")
                 ->question("How many servers should always be running?")
-                ->parser(function(string $input): ?int {
-                    if (!is_numeric($input)) return null;
-                    return intval($input);
+                ->parser(function(mixed $input): ?int {
+                    if (!is_numeric($input)) {
+                        return null;
+                    }
+
+                    return (int)$input;
                 })
                 ->canSkipped(true)
             ->build(),
             QuestionBuilder::builder()
                 ->key("maxServerCount")
                 ->question("How many servers can be running in total?")
-                ->parser(function(string $input): ?int {
-                    if (!is_numeric($input)) return null;
-                    return intval($input);
+                ->parser(function(mixed $input): ?int {
+                    if (!is_numeric($input)) {
+                        return null;
+                    }
+
+                    return (int)$input;
                 })
                 ->canSkipped(true)
             ->build(),
             QuestionBuilder::builder()
                 ->key("templateType")
                 ->question("Is your template a proxy?")
-                ->parser(fn(string $input) => strtolower($input) == "yes")
+                ->parser(fn(string $input) => strtolower($input) === "yes")
                 ->canSkipped(true)
                 ->possibleAnswers("yes", "no")
             ->build()

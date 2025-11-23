@@ -10,8 +10,16 @@ use hydracloud\cloud\player\CloudPlayer;
 final class PlayerSyncPacket extends CloudPacket {
 
     public function __construct(
-        private ?CloudPlayer $player = null,
-        private bool $removal = false
+        private ?CloudPlayer $player = null {
+            get {
+                return $this->player;
+            }
+        },
+        private bool $removal = false {
+            get {
+                return $this->removal;
+            }
+        }
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -22,14 +30,6 @@ final class PlayerSyncPacket extends CloudPacket {
     public function decodePayload(PacketData $packetData): void {
         $this->player = $packetData->readPlayer();
         $this->removal = $packetData->readBool();
-    }
-
-    public function getPlayer(): ?CloudPlayer {
-        return $this->player;
-    }
-
-    public function isRemoval(): bool {
-        return $this->removal;
     }
 
     public function handle(ServerClient $client): void {}

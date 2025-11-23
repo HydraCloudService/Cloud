@@ -8,7 +8,7 @@ use stdClass;
 
 final class Request extends stdClass {
 
-	public const SUPPORTED_REQUEST_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
+	public const array SUPPORTED_REQUEST_METHODS = ["GET", "POST", "PUT", "DELETE", "PATCH"];
 
 	public function __construct(
         private readonly array $headers,
@@ -17,7 +17,7 @@ final class Request extends stdClass {
     ) {}
 
     public function authorized(): bool {
-        return isset($this->headers["auth-key"]) && $this->headers["auth-key"] == MainConfig::getInstance()->getHttpServerAuthKey();
+        return isset($this->headers["auth-key"]) && $this->headers["auth-key"] === MainConfig::getInstance()->getHttpServerAuthKey();
     }
 
 	public function getBody(): ?string {

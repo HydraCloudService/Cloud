@@ -10,14 +10,21 @@ use hydracloud\cloud\network\packet\data\PacketData;
 
 final class LibrarySyncPacket extends CloudPacket {
 
-    private array $data = [];
+    private array $data = [] {
+        get {
+            return $this->data;
+        }
+    }
 
     public function __construct() {
-        foreach (array_filter(LibraryManager::getInstance()->getAll(), fn(Library $library) => $library->isCloudBridgeOnly()) as $lib) {
-            $this->data[] = [
+        foreach (array_filter(LibraryManager::getInstance()->getAll(), static fn(Library $library) => $library->isCloudBridgeOnly()) as $lib) {
+            $data = $this->data;
+            $data[] = [
                 "name" => $lib->getName(),
                 "path" => $lib->getUnzipLocation()
             ];
+
+            $this->data = $data;
         }
     }
 
@@ -27,10 +34,6 @@ final class LibrarySyncPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->data = $packetData->readArray();
-    }
-
-    public function getData(): array {
-        return $this->data;
     }
 
     public function handle(ServerClient $client): void {}

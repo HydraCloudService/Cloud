@@ -19,7 +19,7 @@ final class ClassLoader extends ThreadSafe {
         $this->addPath("hydracloud\\cloud\\", SOURCE_PATH);
         spl_autoload_register(function (string $class): void {
             if (($path = $this->getFullPath(self::validate($class))) !== null) {
-                if (file_exists($path) || (IS_PHAR && file_exists($path = Phar::running() . "/src/" . self::validate($class) . ".php")) && !class_exists($class)) {
+                if (file_exists($path) || ((IS_PHAR && file_exists($path = Phar::running() . "/src/" . self::validate($class) . ".php")) && !class_exists($class))) {
                     require_once $path;
                 }
             }
@@ -27,7 +27,9 @@ final class ClassLoader extends ThreadSafe {
     }
 
     public function addPath(string $folder, string $path): void {
-        if (!isset($this->paths[self::validate($folder)])) $this->paths[self::validate($folder)] = ThreadSafeArray::fromArray([]);
+        if (!isset($this->paths[self::validate($folder)])) {
+            $this->paths[self::validate($folder)] = ThreadSafeArray::fromArray([]);
+        }
         $this->paths[self::validate($folder)][] = self::validate(self::addSeparator($path));
     }
 
@@ -35,11 +37,15 @@ final class ClassLoader extends ThreadSafe {
         foreach ($this->paths as $src => $p) {
             foreach ($p as $key) {
                 if (!$src) {
-                    if (file_exists(($path = $key . $class . ".php"))) return $path;
+                    if (file_exists(($path = $key . $class . ".php"))) {
+                        return $path;
+                    }
                     continue;
                 }
 
-                if (str_contains($class, $src)) return self::replaceLast($src, $class . ".php", $key);
+                if (str_contains($class, $src)) {
+                    return self::replaceLast($src, $class . ".php", $key);
+                }
             }
         }
         return null;

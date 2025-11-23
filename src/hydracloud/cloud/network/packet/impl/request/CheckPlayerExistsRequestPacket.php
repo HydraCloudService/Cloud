@@ -10,7 +10,11 @@ use hydracloud\cloud\player\CloudPlayerManager;
 
 class CheckPlayerExistsRequestPacket extends RequestPacket {
 
-    public function __construct(private string $player = "") {}
+    public function __construct(private string $player = "" {
+        get {
+            return $this->player;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->player);
@@ -20,18 +24,12 @@ class CheckPlayerExistsRequestPacket extends RequestPacket {
         $this->player = $packetData->readString();
     }
 
-    public function getPlayer(): string {
-        return $this->player;
-    }
-
     public function handle(ServerClient $client): void {
-        $isPlayer = (CloudPlayerManager::getInstance()->get($this->player) != null);
+        $isPlayer = (CloudPlayerManager::getInstance()->get($this->player) !== null);
         $alreadyConnected = false;
 
-        if (CloudPlayerManager::getInstance()->get($this->player) != null) {
-            if (CloudPlayerManager::getInstance()->get($this->player)->getCurrentServer() != null) {
-                $alreadyConnected = true;
-            }
+        if ((CloudPlayerManager::getInstance()->get($this->player) !== null) && CloudPlayerManager::getInstance()->get($this->player)->getCurrentServer() !== null) {
+            $alreadyConnected = true;
         }
 
         $result = ($isPlayer && !$alreadyConnected);

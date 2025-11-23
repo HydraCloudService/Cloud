@@ -8,7 +8,11 @@ use hydracloud\cloud\network\packet\data\PacketData;
 
 final class ProxyUnregisterServerPacket extends CloudPacket {
 
-    public function __construct(private string $serverName = "") {}
+    public function __construct(private string $serverName = "" {
+        get {
+            return $this->serverName;
+        }
+    }) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->serverName);
@@ -16,10 +20,6 @@ final class ProxyUnregisterServerPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->serverName = $packetData->readString();
-    }
-
-    public function getServerName(): string {
-        return $this->serverName;
     }
 
     public function handle(ServerClient $client): void {}

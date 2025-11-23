@@ -28,19 +28,18 @@ final class WebAccountUpdateEndPoint extends EndPoint {
             return ["error" => "Please provide a valid action! (role, password)"];
         }
 
-        if ($action == "password") {
+        if ($action === "password") {
             WebAccountManager::getInstance()->update($account, $value, null);
+        } else if (($role = WebAccountRoles::get($value)) !== null) {
+            WebAccountManager::getInstance()->update($account, null, $role);
         } else {
-            if (($role = WebAccountRoles::get($value)) !== null) {
-                WebAccountManager::getInstance()->update($account, null, $role);
-            } else return ["error" => "Please provide a valid role! (admin, default)"];
+            return ["error" => "Please provide a valid role! (admin, default)"];
         }
 
         return ["success" => "The web account has been updated!"];
     }
 
     public function isBadRequest(Request $request): bool {
-        if ($request->data()->queries()->has("name") && $request->data()->queries()->has("action") && $request->data()->queries()->has("value")) return false;
-        return true;
+        return !($request->data()->queries()->has("name") && $request->data()->queries()->has("action") && $request->data()->queries()->has("value"));
     }
 }

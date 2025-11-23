@@ -17,9 +17,21 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 final class ServerHandshakeRequestPacket extends RequestPacket {
 
     public function __construct(
-        private ?string $serverName = null,
-        private ?int $processId = null,
-        private ?int $maxPlayers = null
+        private ?string $serverName = null {
+            get {
+                return $this->serverName;
+            }
+        },
+        private ?int $processId = null {
+            get {
+                return $this->processId;
+            }
+        },
+        private ?int $maxPlayers = null {
+            get {
+                return $this->maxPlayers;
+            }
+        }
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -34,29 +46,19 @@ final class ServerHandshakeRequestPacket extends RequestPacket {
         $this->maxPlayers = $packetData->readInt();
     }
 
-    public function getServerName(): ?string {
-        return $this->serverName;
-    }
-
-    public function getProcessId(): ?int {
-        return $this->processId;
-    }
-
-    public function getMaxPlayers(): ?int {
-        return $this->maxPlayers;
-    }
-
     public function handle(ServerClient $client): void {
         if (($server = CloudServerManager::getInstance()->get($this->serverName)) !== null) {
             ServerClientCache::getInstance()->add($server, $client);
             CloudLogger::get()->success("The server §b" . $server->getName() . " §rhas §aconnected §rto the cloud.");
-            $server->getCloudServerData()->setMaxPlayers($this->maxPlayers);
-            $server->getCloudServerData()->setProcessId($this->processId);
+            $server->getCloudServerData()->maxPlayers = $this->maxPlayers;
+            $server->getCloudServerData()->processId = $this->processId;
             $server->setVerifyStatus(VerifyStatus::VERIFIED());
             $server->sync();
             $this->sendResponse(new ServerHandshakeResponsePacket(VerifyStatus::VERIFIED()), $client);
-            Network::getInstance()->broadcastPacket(new ServerSyncPacket($server), $client);
+            Network::getInstance()?->broadcastPacket(new ServerSyncPacket($server), $client);
             $server->setServerStatus(ServerStatus::ONLINE());
-        } else $this->sendResponse(new ServerHandshakeResponsePacket(VerifyStatus::DENIED()), $client);
+        } else {
+            $this->sendResponse(new ServerHandshakeResponsePacket(VerifyStatus::DENIED()), $client);
+        }
     }
 }

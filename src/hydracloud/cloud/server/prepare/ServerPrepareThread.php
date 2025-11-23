@@ -8,11 +8,23 @@ use pocketmine\snooze\SleeperHandlerEntry;
 
 class ServerPrepareThread extends Thread {
 
-    private SleeperHandlerEntry $sleeperHandlerEntry;
+    public SleeperHandlerEntry $sleeperHandlerEntry {
+        set(SleeperHandlerEntry $value) {
+            $this->sleeperHandlerEntry = $value;
+        }
+    }
     /** @var ThreadSafeArray<ServerPrepareEntry> */
-    private ThreadSafeArray $prepareQueue;
+    public ThreadSafeArray $prepareQueue {
+        get {
+            return $this->prepareQueue;
+        }
+    }
     /** @var ThreadSafeArray<ServerPrepareEntry> */
-    private ThreadSafeArray $finishedPreparations;
+    public ThreadSafeArray $finishedPreparations {
+        get {
+            return $this->finishedPreparations;
+        }
+    }
 
     public function __construct() {
         $this->prepareQueue = new ThreadSafeArray();
@@ -23,8 +35,10 @@ class ServerPrepareThread extends Thread {
         while (true) {
             $this->synchronized(function (): void {
                 if ($this->isRunning() &&
-                    $this->prepareQueue->count() == 0 &&
-                    $this->finishedPreparations->count() == 0) $this->wait();
+                    $this->prepareQueue->count() === 0 &&
+                    $this->finishedPreparations->count() === 0) {
+                    $this->wait();
+                }
             });
 
             /** @var ServerPrepareEntry $entry */
@@ -36,10 +50,6 @@ class ServerPrepareThread extends Thread {
         }
     }
 
-    public function setSleeperHandlerEntry(SleeperHandlerEntry $sleeperHandlerEntry): void {
-        $this->sleeperHandlerEntry = $sleeperHandlerEntry;
-    }
-
     public function pushToQueue(ServerPrepareEntry $entry): void {
         $this->synchronized(function () use ($entry): void {
             $this->prepareQueue[] = $entry;
@@ -47,11 +57,4 @@ class ServerPrepareThread extends Thread {
         });
     }
 
-    public function getPrepareQueue(): ThreadSafeArray {
-        return $this->prepareQueue;
-    }
-
-    public function getFinishedPreparations(): ThreadSafeArray {
-        return $this->finishedPreparations;
-    }
 }

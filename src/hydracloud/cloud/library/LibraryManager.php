@@ -60,7 +60,7 @@ final class LibraryManager {
                 }
             }
 
-            if ($library->canBeLoaded()) HydraCloud::getInstance()->getClassLoader()->addPath($library->getClassLoadFolder(), $library->getClassLoadPath());
+            if ($library->canBeLoaded()) HydraCloud::getInstance()?->getClassLoader()->addPath($library->getClassLoadFolder(), $library->getClassLoadPath());
         }
     }
 
