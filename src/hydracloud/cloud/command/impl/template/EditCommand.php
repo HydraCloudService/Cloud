@@ -44,21 +44,17 @@ final class EditCommand extends Command {
             if (TemplateHelper::isValidEditValue($value, $key, $expected, $realValue)) {
                 TemplateManager::getInstance()->edit(
                     $template,
-                    ($key === "lobby" ? $realValue : null),
-                    ($key === "maintenance" ? $realValue : null),
-                    ($key === "static" ? $realValue : null),
-                    ($key === "maxPlayerCount" ? $realValue : null),
-                    ($key === "minServerCount" ? $realValue : null),
-                    ($key === "maxServerCount" ? $realValue : null),
-                    ($key === "startNewPercentage" ? $realValue : null),
-                    ($key === "autoStart" ? $realValue : null),
+                    ($key == "lobby" ? $realValue : null),
+                    ($key == "maintenance" ? $realValue : null),
+                    ($key == "static" ? $realValue : null),
+                    ($key == "maxPlayerCount" ? $realValue : null),
+                    ($key == "minServerCount" ? $realValue : null),
+                    ($key == "maxServerCount" ? $realValue : null),
+                    ($key == "startNewPercentage" ? $realValue : null),
+                    ($key == "autoStart" ? $realValue : null),
                 );
-            } else {
-                $sender->error("Wrong value provided, expected an §b" . $expected . " §rwhen editing §b" . $key . "§r!");
-            }
-        } else {
-            $sender->error("Undefined key provided!");
-        }
+            } else $sender->error("Wrong value provided, expected an §b" . $expected . " §rwhen editing §b" . $key . "§r!");
+        } else $sender->error("Undefined key provided!");
         return true;
     }
 }

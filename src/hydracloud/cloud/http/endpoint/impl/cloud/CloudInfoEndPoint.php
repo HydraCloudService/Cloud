@@ -24,12 +24,12 @@ final class CloudInfoEndPoint extends EndPoint {
     }
 
     public function handleRequest(Request $request, Response $response): array {
-        $templates = array_map(static fn(Template $template) => $template->getName(), TemplateManager::getInstance()->getAll());
-        $runningServers = array_map(static fn(CloudServer $cloudServer) => $cloudServer->getName(), CloudServerManager::getInstance()->getAll());
-        $loadedPlugins = array_map(static fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll());
-        $enabledPlugins = array_map(static fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll(true));
-        $disabledPlugins = array_filter($loadedPlugins, static fn(string $name) => !in_array($name, $enabledPlugins, true));
-        $players = array_map(static fn(CloudPlayer $player) => $player->getName(), CloudPlayerManager::getInstance()->getAll());
+        $templates = array_map(fn(Template $template) => $template->getName(), TemplateManager::getInstance()->getAll());
+        $runningServers = array_map(fn(CloudServer $cloudServer) => $cloudServer->getName(), CloudServerManager::getInstance()->getAll());
+        $loadedPlugins = array_map(fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll());
+        $enabledPlugins = array_map(fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll(true));
+        $disabledPlugins = array_filter($loadedPlugins, fn(string $name) => !in_array($name, $enabledPlugins));
+        $players = array_map(fn(CloudPlayer $player) => $player->getName(), CloudPlayerManager::getInstance()->getAll());
 
         return [
             "version" => VersionInfo::VERSION,
@@ -40,7 +40,7 @@ final class CloudInfoEndPoint extends EndPoint {
             "loadedPlugins" => array_values($loadedPlugins),
             "enabledPlugins" => array_values($enabledPlugins),
             "disabledPlugins" => array_values($disabledPlugins),
-            "network_address" => Network::getInstance()->address->__toString()
+            "network_address" => Network::getInstance()->getAddress()->__toString()
         ];
     }
 

@@ -7,11 +7,7 @@ use hydracloud\cloud\network\packet\ResponsePacket;
 
 final class CheckPlayerMaintenanceResponsePacket extends ResponsePacket {
 
-    public function __construct(private bool $value = false {
-        get {
-            return $this->value;
-        }
-    }) {}
+    public function __construct(private bool $value = false) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->value);
@@ -19,6 +15,10 @@ final class CheckPlayerMaintenanceResponsePacket extends ResponsePacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->value = $packetData->readBool();
+    }
+
+    public function getValue(): bool {
+        return $this->value;
     }
 
     public static function create(bool $value): self {

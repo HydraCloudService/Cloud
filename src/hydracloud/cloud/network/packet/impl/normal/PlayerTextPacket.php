@@ -11,21 +11,9 @@ use hydracloud\cloud\player\CloudPlayerManager;
 final class PlayerTextPacket extends CloudPacket {
 
     public function __construct(
-        private string $player = "" {
-            get {
-                return $this->player;
-            }
-        },
-        private string $message = "" {
-            get {
-                return $this->message;
-            }
-        },
-        private ?TextType $textType = null {
-            get {
-                return $this->textType;
-            }
-        }
+        private string $player = "",
+        private string $message = "",
+        private ?TextType $textType = null
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -40,10 +28,20 @@ final class PlayerTextPacket extends CloudPacket {
         $this->textType = $packetData->readTextType();
     }
 
+    public function getPlayer(): string {
+        return $this->player;
+    }
+
+    public function getMessage(): string {
+        return $this->message;
+    }
+
+    public function getTextType(): TextType {
+        return $this->textType;
+    }
+
     public function handle(ServerClient $client): void {
-        if (($player = CloudPlayerManager::getInstance()->get($this->player)) !== null) {
-            $player->send($this->message, $this->textType);
-        }
+        if (($player = CloudPlayerManager::getInstance()->get($this->player)) !== null) $player->send($this->message, $this->textType);
     }
 
     public static function create(string $player, string $message, TextType $textType): self {

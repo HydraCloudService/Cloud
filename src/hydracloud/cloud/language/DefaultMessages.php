@@ -4,7 +4,7 @@ namespace hydracloud\cloud\language;
 
 final class DefaultMessages {
 
-    public const array MESSAGES = [
+    public const MESSAGES = [
         "raw.yes" => "Yes",
         "raw.no" => "No",
         "raw.author" => "Author(s)",
@@ -199,7 +199,7 @@ final class DefaultMessages {
         "inGame.proxy.stopped" => "§f§lProxy shutdown..."
     ];
 
-    public const array MESSAGES_DE = [
+    public const MESSAGES_DE = [
         "raw.yes" => "Ja",
         "raw.no" => "Nein",
         "raw.author" => "Autor(en)",

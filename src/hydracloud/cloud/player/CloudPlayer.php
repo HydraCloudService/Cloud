@@ -100,13 +100,9 @@ final class CloudPlayer {
     }
 
     public function kick(string $reason = ""): void {
-        CloudLogger::get()->debug("Kicking " . $this->name . " from the network, reason: " . ($reason === "" ? "NULL" : $reason));
+        CloudLogger::get()->debug("Kicking " . $this->name . " from the network, reason: " . ($reason == "" ? "NULL" : $reason));
         ($ev = new PlayerKickEvent($this, $reason))->call();
-
-        if ($ev->cancelled) {
-            return;
-        }
-
+        if ($ev->isCancelled()) return;
         PlayerKickPacket::create($this->getName(), $reason)->sendPacket($this->getCurrentProxy() ?? $this->getCurrentServer());
     }
 
@@ -128,8 +124,8 @@ final class CloudPlayer {
             $player["host"],
             $player["xboxUserId"],
             $player["uniqueId"],
-            ($player["currentServer"] ?? null),
-            ($player["currentProxy"] ?? null)
+            (!isset($player["currentServer"]) ? null : $player["currentServer"]),
+            (!isset($player["currentProxy"]) ? null : $player["currentProxy"])
         );
     }
 }

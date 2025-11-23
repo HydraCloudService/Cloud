@@ -4,9 +4,9 @@ namespace hydracloud\cloud\cache;
 
 final class InGameModule {
 
-    public const string SIGN_MODULE = "sign_module";
-    public const string NPC_MODULE = "npc_module";
-    public const string HUB_COMMAND_MODULE = "hub_command_module";
+    public const SIGN_MODULE = "sign_module";
+    public const NPC_MODULE = "npc_module";
+    public const HUB_COMMAND_MODULE = "hub_command_module";
 
     private static array $moduleStates = [
         self::SIGN_MODULE => false,
@@ -15,9 +15,7 @@ final class InGameModule {
     ];
 
     public static function setModuleState(string $module, bool $enabled): void {
-        if (isset(self::$moduleStates[$module])) {
-            self::$moduleStates[$module] = $enabled;
-        }
+        if (isset(self::$moduleStates[$module])) self::$moduleStates[$module] = $enabled;
     }
 
     public static function getModuleState(string $module): bool {

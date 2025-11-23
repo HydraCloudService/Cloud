@@ -22,13 +22,11 @@ final class ThreadManager extends ThreadSafe {
     }
 
     public function remove(Worker|Thread $thread): void {
-        if (isset($this->threads[spl_object_id($this)])) {
-            unset($this->threads[spl_object_id($thread)]);
-        }
+        if (isset($this->threads[spl_object_id($this)])) unset($this->threads[spl_object_id($thread)]);
     }
 
     public function getAll(): array {
-        return array_map(static function ($thread) {
+        return array_map(function ($thread) {
             return $thread;
         }, (array) $this->threads);
     }

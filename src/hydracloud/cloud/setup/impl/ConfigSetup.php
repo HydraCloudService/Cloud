@@ -27,15 +27,9 @@ final class ConfigSetup extends Setup {
                 ->question("Which port should the cloud use?")
                 ->canSkipped(true)
                 ->default(3656)
-                ->parser(function(mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) > 65535 || $input <= 0) {
-                        return null;
-                    }
-
+                ->parser(function(string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) > 65535 || $input <= 0) return null;
                     return $input;
                 })
             ->build(),
@@ -45,15 +39,9 @@ final class ConfigSetup extends Setup {
                 ->recommendation("512")
                 ->default("512")
                 ->canSkipped(true)
-                ->parser(function(mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) <= 0) {
-                        return null;
-                    }
-
+                ->parser(function(string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) <= 0) return null;
                     return $input;
                 })
             ->build(),
@@ -62,7 +50,7 @@ final class ConfigSetup extends Setup {
                 ->question("Do you want to enable the debug mode?")
                 ->canSkipped(true)
                 ->default("yes")
-                ->parser(fn(string $input) => strtolower($input) === "yes")
+                ->parser(fn(string $input) => strtolower($input) == "yes")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
             ->build(),
@@ -71,7 +59,7 @@ final class ConfigSetup extends Setup {
                 ->question("Should the cloud check for updates by itself?")
                 ->canSkipped(true)
                 ->default("yes")
-                ->parser(fn(string $input) => strtolower($input) === "yes")
+                ->parser(fn(string $input) => strtolower($input) == "yes")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
             ->build(),
@@ -80,7 +68,7 @@ final class ConfigSetup extends Setup {
                 ->question("Should the cloud execute those updates?")
                 ->canSkipped(true)
                 ->default("yes")
-                ->parser(fn(string $input) => strtolower($input) === "yes")
+                ->parser(fn(string $input) => strtolower($input) == "yes")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
                 ->build(),
@@ -98,7 +86,7 @@ final class ConfigSetup extends Setup {
                 ->question("Do you want to enable the HTTP server?")
                 ->canSkipped(true)
                 ->default("yes")
-                ->parser(fn(string $input) => strtolower($input) === "true")
+                ->parser(fn(string $input) => strtolower($input) == "true")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
             ->build(),
@@ -107,15 +95,9 @@ final class ConfigSetup extends Setup {
                 ->question("Which port should be used by the http server?")
                 ->canSkipped(true)
                 ->default("8000")
-                ->parser(function(mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) > 65535 || $input <= 0) {
-                        return null;
-                    }
-
+                ->parser(function(string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) > 65535 || $input <= 0) return null;
                     return $input;
                 })
                 ->build(),
@@ -125,15 +107,9 @@ final class ConfigSetup extends Setup {
                 ->canSkipped(true)
                 ->default("15")
                 ->recommendation("15")
-                ->parser(function (mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) <= 0) {
-                        return null;
-                    }
-
+                ->parser(function (string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) <= 0) return null;
                     return $input;
                 })
                 ->build(),
@@ -143,15 +119,9 @@ final class ConfigSetup extends Setup {
                 ->canSkipped(true)
                 ->default("20")
                 ->recommendation("20")
-                ->parser(function (mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) <= 0) {
-                        return null;
-                    }
-
+                ->parser(function (string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) <= 0) return null;
                     return $input;
                 })
                 ->build(),
@@ -161,15 +131,9 @@ final class ConfigSetup extends Setup {
                 ->canSkipped(true)
                 ->default("0")
                 ->recommendation("0")
-                ->parser(function (mixed $input): ?int {
-                    if (!is_numeric($input)) {
-                        return null;
-                    }
-
-                    if (($input = (int)$input) < 0 || $input > 5) {
-                        return null;
-                    }
-
+                ->parser(function (string $input): ?int {
+                    if (!is_numeric($input)) return null;
+                    if (($input = intval($input)) < 0 || $input > 5) return null;
                     return $input;
                 })
             ->build(),
@@ -177,7 +141,7 @@ final class ConfigSetup extends Setup {
                 ->key("defaultLobbyTemplate")
                 ->question("Do you want to create a default Lobby template?")
                 ->canSkipped(true)
-                ->parser(fn(string $input) => strtolower($input) === "true")
+                ->parser(fn(string $input) => strtolower($input) == "true")
                 ->default("yes")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
@@ -186,7 +150,7 @@ final class ConfigSetup extends Setup {
                 ->key("defaultProxyTemplate")
                 ->question("Do you want to create a default Proxy template?")
                 ->canSkipped(true)
-                ->parser(fn(string $input) => strtolower($input) === "true")
+                ->parser(fn(string $input) => strtolower($input) == "true")
                 ->default("yes")
                 ->possibleAnswers("yes", "no")
                 ->recommendation("yes")
@@ -196,14 +160,14 @@ final class ConfigSetup extends Setup {
 
     public function handleResults(array $results): void {
         MainConfig::getInstance()->setNetworkPort($results["networkPort"] ?? 3656);
-        MainConfig::getInstance()->memoryLimit = $results["memoryLimit"] ?? 512;
-        MainConfig::getInstance()->debugMode = $results["debugMode"] ?? true;
-        MainConfig::getInstance()->startMethod = $results["startMethod"] ?? (ServerUtils::checkTmux() ? "tmux" : "screen");
+        MainConfig::getInstance()->setMemoryLimit($results["memoryLimit"] ?? 512);
+        MainConfig::getInstance()->setDebugMode($results["debugMode"] ?? true);
+        MainConfig::getInstance()->setStartMethod($results["startMethod"] ?? (ServerUtils::checkTmux() ? "tmux" : "screen"));
         MainConfig::getInstance()->setHttpServerEnabled($results["httpServerEnabled"] ?? true);
         MainConfig::getInstance()->setHttpServerPort($results["httpServerPort"] ?? 8000);
         MainConfig::getInstance()->setServerTimeouts("server", $results["serverTimeout"] ?? 15);
         MainConfig::getInstance()->setServerTimeouts("proxy", $results["proxyTimeout"] ?? 20);
         MainConfig::getInstance()->setServerPrepareThreads($results["prepareThreads"] ?? 0);
-        ExceptionHandler::tryCatch(static fn() => MainConfig::getInstance()->save(), "Failed to save main config");
+        ExceptionHandler::tryCatch(fn() => MainConfig::getInstance()->save(), "Failed to save main config");
     }
 }

@@ -22,11 +22,11 @@ final class NetUtils {
         fwrite($fp, $data);
         fclose($fp);
 
-        return curl_errno($ch) === 0;
+        return curl_errno($ch) == 0;
     }
 
     public static function fileSize(string $url): ?int {
-        $stream = fopen($url, 'rb', context: stream_context_create([
+        $stream = fopen($url, "r", context: stream_context_create([
             "ssl" => [
                 "verify_peer" => false,
                 "verify_peer_name" => false

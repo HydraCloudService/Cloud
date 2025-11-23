@@ -4,7 +4,6 @@ namespace hydracloud\cloud\library;
 
 use hydracloud\cloud\util\FileUtils;
 use hydracloud\cloud\util\net\NetUtils;
-use RuntimeException;
 use ZipArchive;
 
 final readonly class Library {
@@ -24,45 +23,31 @@ final readonly class Library {
     ) {}
 
     public function download(): bool {
-        if (!NetUtils::download($this->downloadUrl, $this->fileLocation)) {
-            return false;
-        }
-
+        if (!NetUtils::download($this->downloadUrl, $this->fileLocation)) return false;
         $archive = new ZipArchive();
         if ($archive->open($this->fileLocation)) {
-            if (!file_exists($this->unzipLocation) && !mkdir($concurrentDirectory = $this->unzipLocation) && !is_dir($concurrentDirectory)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-            }
+            if (!file_exists($this->unzipLocation)) mkdir($this->unzipLocation);
             $archive->extractTo($this->unzipLocation);
             if ($this->copySource !== "" && $this->copyDestination !== "") {
                 FileUtils::copyDirectory($this->copySource, $this->copyDestination);
                 foreach ($this->excludedFiles as $excludedFile) {
-                    if (file_exists($this->copyDestination . DIRECTORY_SEPARATOR . $excludedFile)) {
-                        unlink($this->copyDestination . DIRECTORY_SEPARATOR . $excludedFile);
-                    }
+                    if (file_exists($this->copyDestination . DIRECTORY_SEPARATOR . $excludedFile)) unlink($this->copyDestination . DIRECTORY_SEPARATOR . $excludedFile);
                 }
             } else {
                 foreach ($this->excludedFiles as $excludedFile) {
-                    if (file_exists($this->unzipLocation . DIRECTORY_SEPARATOR . $excludedFile)) {
-                        unlink($this->unzipLocation . DIRECTORY_SEPARATOR . $excludedFile);
-                    }
+                    if (file_exists($this->unzipLocation . DIRECTORY_SEPARATOR . $excludedFile)) unlink($this->unzipLocation . DIRECTORY_SEPARATOR . $excludedFile);
                 }
             }
         }
 
         @unlink($this->fileLocation);
-        if ($this->copySource !== "") {
-            FileUtils::removeDirectory($this->deletionDir ?? $this->copySource);
-        }
+        if ($this->copySource !== "") FileUtils::removeDirectory($this->deletionDir ?? $this->copySource);
         return true;
     }
 
     public function exists(): bool {
-        if (@file_exists($this->copyDestination)) {
-            $exists = count(array_diff(scandir($this->copyDestination), [".", ".."])) > 0;
-        } else {
-            $exists = false;
-        }
+        if (@file_exists($this->copyDestination)) $exists = count(array_diff(scandir($this->copyDestination), [".", ".."])) > 0;
+        else $exists = false;
         return $exists;
     }
 

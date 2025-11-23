@@ -16,11 +16,7 @@ final class ConnectionPool
     private static ?self $instance = null;
     protected array $completionHandlers = [];
     /** @var array<MySQLThread> */
-    protected array $threads = [] {
-        get {
-            return $this->threads;
-        }
-    }
+    protected array $threads = [];
 
     /**
      * @param array $credentials e.g. ["address" => "127.0.0.1", "user" => "admin", "password" => "123", "database" => "player", "port" => 3306] <-- in this order
@@ -44,18 +40,14 @@ final class ConnectionPool
                 try {
                     /** @var MySQLQuery $query */
                     while (($query = $thread->getDoneQueries()->shift()) !== null) {
-                        if ($query->crashed) {
-                            ($this->onException)(new Exception($query->exception));
+                        if ($query->isCrashed()) {
+                            ($this->onException)(new Exception($query->getException()));
                             return;
                         }
 
                         $id = spl_object_id($query);
                         [$successHandler] = $this->completionHandlers[$id];
-
-                        if ($successHandler !== null) {
-                            ($successHandler)($query->getResult());
-                        }
-
+                        if ($successHandler !== null) ($successHandler)($query->getResult());
                         unset($this->completionHandlers[$id]);
                     }
                 } catch (Exception $exception) {
@@ -65,10 +57,7 @@ final class ConnectionPool
 
             $thread->setSleeperHandlerEntry($sleeperHandlerEntry);
             $thread->start(Thread::INHERIT_NONE);
-
-            $threads = $this->threads;
-            $threads[] = $thread;
-            $this->threads = $threads;
+            $this->threads[] = $thread;
         }
     }
 
@@ -88,6 +77,11 @@ final class ConnectionPool
     public function getThreadCount(): int
     {
         return $this->threadCount;
+    }
+
+    public function getThreads(): array
+    {
+        return $this->threads;
     }
 
     public static function getInstance(): ?self

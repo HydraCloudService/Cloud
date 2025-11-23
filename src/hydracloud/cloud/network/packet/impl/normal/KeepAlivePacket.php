@@ -10,7 +10,7 @@ final class KeepAlivePacket extends CloudPacket {
     public function handle(ServerClient $client): void {
         if (($server = $client->getServer()) !== null) {
             $server->setLastCheckTime(time());
-            $server->sendDelayedPacket(new self(), 50);
+            $server->sendDelayedPacket(new KeepAlivePacket(), 50);
         }
     }
 }

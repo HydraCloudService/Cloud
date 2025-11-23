@@ -9,16 +9,8 @@ use hydracloud\cloud\network\packet\data\PacketData;
 final class LanguageSyncPacket extends CloudPacket {
 
     public function __construct(
-        private string $language = "" {
-            get {
-                return $this->language;
-            }
-        },
-        private array $messages = [] {
-            get {
-                return $this->messages;
-            }
-        }
+        private string $language = "",
+        private array $messages = []
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -29,6 +21,14 @@ final class LanguageSyncPacket extends CloudPacket {
     public function decodePayload(PacketData $packetData): void {
         $this->language = $packetData->readString();
         $this->messages = $packetData->readArray();
+    }
+
+    public function getLanguage(): string {
+        return $this->language;
+    }
+
+    public function getMessages(): array {
+        return $this->messages;
     }
 
     public function handle(ServerClient $client): void {}

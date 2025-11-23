@@ -16,7 +16,7 @@ final class CloudPlayerListEndPoint extends EndPoint {
     }
 
     public function handleRequest(Request $request, Response $response): array {
-        return array_values(array_map(static fn(CloudPlayer $player) => $player->getName(), CloudPlayerManager::getInstance()->getAll()));
+        return array_values(array_map(fn(CloudPlayer $player) => $player->getName(), CloudPlayerManager::getInstance()->getAll()));
     }
 
     public function isBadRequest(Request $request): bool {

@@ -11,18 +11,12 @@ use RuntimeException;
 
 abstract class CloudPacket  {
 
-    private bool $encoded = false {
-        get {
-            return $this->encoded;
-        }
-    }
+    private bool $encoded = false;
 
     public function encode(PacketData $packetData): void {
-        if ($this->encoded) {
-            throw new RuntimeException("Packet: " . new ReflectionClass($this)->getShortName() . " is already encoded");
-        }
+        if ($this->encoded) throw new RuntimeException("Packet: " . (new ReflectionClass($this))->getShortName() . " is already encoded");
         $this->encoded = true;
-        $packetData->write(new ReflectionClass($this)->getShortName());
+        $packetData->write((new ReflectionClass($this))->getShortName());
         $this->encodePayload($packetData);
     }
 
@@ -39,11 +33,14 @@ abstract class CloudPacket  {
 
     public function sendPacket(ServerClient|CloudServer $client): bool {
         if ($client instanceof CloudServer) return $client->sendPacket($this);
-        return Network::getInstance()?->sendPacket($this, $client);
+        return Network::getInstance()->sendPacket($this, $client);
     }
 
     public function broadcastPacket(ServerClient ...$excluded): void {
-        Network::getInstance()?->broadcastPacket($this, ...$excluded);
+        Network::getInstance()->broadcastPacket($this, ...$excluded);
     }
 
+    public function isEncoded(): bool {
+        return $this->encoded;
+    }
 }

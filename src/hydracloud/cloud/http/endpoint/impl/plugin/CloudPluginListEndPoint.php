@@ -18,7 +18,7 @@ final class CloudPluginListEndPoint extends EndPoint {
     public function handleRequest(Request $request, Response $response): array {
         $loadedPlugins = array_map(fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll());
         $enabledPlugins = array_map(fn(CloudPlugin $plugin) => $plugin->getDescription()->getName(), CloudPluginManager::getInstance()->getAll(true));
-        $disabledPlugins = array_filter($loadedPlugins, static fn(string $name) => !in_array($name, $enabledPlugins, true));
+        $disabledPlugins = array_filter($loadedPlugins, fn(string $name) => !in_array($name, $enabledPlugins));
         return [
             "loadedPlugins" => array_values($loadedPlugins),
             "enabledPlugins" => array_values($enabledPlugins),

@@ -4,7 +4,6 @@ namespace hydracloud\cloud;
 
 use hydracloud\cloud\server\prepare\ServerPreparator;
 use hydracloud\cloud\terminal\log\level\CloudLogLevel;
-use JsonException;
 use Phar;
 use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\event\EventManager;
@@ -42,48 +41,17 @@ final class HydraCloud {
 
     private static ?self $instance = null;
 
-    private bool $running = true {
-        get {
-            return $this->running;
-        }
-    }
-    public int $tick = 0 {
-        get {
-            return $this->tick;
-        }
-    }
-    private float $startTime = 0 {
-        get {
-            return $this->startTime;
-        }
-    }
+    private bool $running = true;
+    private int $tick = 0;
+    private float $startTime = 0;
 
     private array $userNotificationsOnStart = [];
 
-    public SleeperHandler $sleeperHandler {
-        get {
-            return $this->sleeperHandler;
-        }
-    }
-    private Terminal $terminal {
-        get {
-            return $this->terminal;
-        }
-    }
-    private Network $network {
-        get {
-            return $this->network;
-        }
-    }
-    private HttpServer $httpServer {
-        get {
-            return $this->httpServer;
-        }
-    }
+    private SleeperHandler $sleeperHandler;
+    private Terminal $terminal;
+    private Network $network;
+    private HttpServer $httpServer;
 
-    /**
-     * @throws JsonException
-     */
     public function __construct(
         private readonly ClassLoader $classLoader
     ) {
@@ -91,16 +59,13 @@ final class HydraCloud {
         $this->startUp();
     }
 
-    /**
-     * @throws JsonException
-     */
     protected function startUp(): void {
         if (Utils::checkRunning($pid)) {
             CloudLogger::get()->error("Another instance of §bHydra§3Cloud §ris already running! §8(§rProcessId: §b" . $pid . "§8)");
             exit(1);
         }
 
-        if (PHP_OS_FAMILY === "Windows") {
+        if (PHP_OS_FAMILY == "Windows") {
             CloudLogger::get()->error("You can't use §bHydra§3Cloud §ron Windows!");
             exit(1);
         }
@@ -139,12 +104,12 @@ final class HydraCloud {
         $this->terminal = new Terminal();
         $this->terminal->start();
 
-        CloudLogger::get()->emptyLine()->usePrefix = false;
+        CloudLogger::get()->emptyLine()->setUsePrefix(false);
         CloudLogger::get()->info("  §bHydra§3Cloud §8- §rA cloud system for pocketmine servers with proxy support §8- §b" . VersionInfo::VERSION . (VersionInfo::isBeta() ? "§c@BETA" : "") . " §8- §rdeveloped by §b" . implode("§8, §b", VersionInfo::DEVELOPERS));
-        CloudLogger::get()->emptyLine()->usePrefix = true;
+        CloudLogger::get()->emptyLine()->setUsePrefix(true);
 
         if (FIRST_RUN) {
-            new ConfigSetup()->completion(function(array $results): void {
+            (new ConfigSetup())->completion(function(array $results): void {
                 $this->start();
                 if ($results["defaultLobbyTemplate"] ?? true) {
                     TemplateManager::getInstance()->create(Template::lobby("Lobby"));
@@ -154,18 +119,12 @@ final class HydraCloud {
                     TemplateManager::getInstance()->create(Template::proxy("Proxy"));
                 }
             })->startSetup();
-        } else {
-            $this->start();
-        }
-
+        } else $this->start();
         $this->tick();
     }
 
-    /**
-     * @throws JsonException
-     */
     public function start(): void {
-        ini_set("memory_limit", ($memory = MainConfig::getInstance()->memoryLimit) > 0 ? $memory . "M" : "-1");
+        ini_set("memory_limit", ($memory = MainConfig::getInstance()->getMemoryLimit()) > 0 ? $memory . "M" : "-1");
         CloudLogger::get()->info("The §bCloud §ris §astarting§r...");
         $this->startTime = microtime(true);
 
@@ -185,31 +144,22 @@ final class HydraCloud {
 
         $this->network->init();
 
-        if (MainConfig::getInstance()->isHttpServerEnabled()) {
-            $this->httpServer->init();
-        }
+        if (MainConfig::getInstance()->isHttpServerEnabled()) $this->httpServer->init();
+        if (MainConfig::getInstance()->isWebEnabled()) WebAccountManager::getInstance()->load();
 
-        if (MainConfig::getInstance()->isWebEnabled()) {
-            WebAccountManager::getInstance()->load();
-        }
-
-        if (MainConfig::getInstance()->updateChecks) {
+        if (MainConfig::getInstance()->isUpdateChecks()) {
             CloudLogger::get()->info("Checking for §bupdates§r...");
             UpdateChecker::getInstance()->check();
         }
 
         $startedTime = (microtime(true) - $this->startTime);
-        new CloudStartedEvent($startedTime)->call();
+        (new CloudStartedEvent($startedTime))->call();
         CloudLogger::get()->success("§bCloud §rhas been §astarted§r. §8(§rTook §b" . number_format($startedTime, 3) . "s§8)");
-
-        foreach ($this->userNotificationsOnStart as $entry) {
-            CloudLogger::get()->send($entry[1], $entry[0]);
-        }
-
+        foreach ($this->userNotificationsOnStart as $entry) CloudLogger::get()->send($entry[1], $entry[0]);
         $this->userNotificationsOnStart = [];
-        if (count(TemplateManager::getInstance()->getAll()) === 0 && FIRST_RUN) {
+        if (count(TemplateManager::getInstance()->getAll()) == 0 && FIRST_RUN) {
             CloudLogger::get()->info("No templates found, starting the setup...");
-            new TemplateSetup()->startSetup();
+            (new TemplateSetup())->startSetup();
         }
 
         $this->network->start();
@@ -230,28 +180,15 @@ final class HydraCloud {
     }
 
     public function shutdown(): void {
-        if (!$this->running) {
-            return;
-        }
-
+        if (!$this->running) return;
         $this->running = false;
         EventManager::getInstance()->removeAll();
         CloudServerManager::getInstance()->stopAll(true);
         CloudPluginManager::getInstance()->disableAll();
         AsyncPool::getInstance()->shutdown();
-
-        if (isset($this->network)) {
-            $this->network->close();
-        }
-
-        if (isset($this->terminal)) {
-            $this->terminal->quit();
-        }
-
-        if (isset($this->httpServer)) {
-            $this->httpServer->close();
-        }
-
+        if (isset($this->network)) $this->network->close();
+        if (isset($this->terminal)) $this->terminal->quit();
+        if (isset($this->httpServer)) $this->httpServer->close();
         ShutdownHandler::unregister();
         ThreadManager::getInstance()->stopAll();
         Utils::deleteLockFile();
@@ -261,15 +198,40 @@ final class HydraCloud {
     }
 
     public function getUptime(): float {
-        if ($this->startTime <= 0) {
-            return 0;
-        }
-
+        if ($this->startTime <= 0) return 0;
         return microtime(true) - $this->startTime;
+    }
+
+    public function getHttpServer(): HttpServer {
+        return $this->httpServer;
+    }
+
+    public function getNetwork(): Network {
+        return $this->network;
+    }
+
+    public function getTerminal(): Terminal {
+        return $this->terminal;
+    }
+
+    public function getSleeperHandler(): SleeperHandler {
+        return $this->sleeperHandler;
     }
 
     public function getClassLoader(): ClassLoader {
         return $this->classLoader;
+    }
+
+    public function getStartTime(): float {
+        return $this->startTime;
+    }
+
+    public function getTick(): int {
+        return $this->tick;
+    }
+
+    public function isRunning(): bool {
+        return $this->running;
     }
 
     public static function getInstance(): ?self {
@@ -305,48 +267,20 @@ define("TEMPLATES_PATH", CLOUD_PATH . "templates/");
 define("SERVER_GROUPS_PATH", CLOUD_PATH . "groups/");
 define("FIRST_RUN", !file_exists(STORAGE_PATH . "config.json"));
 
-if (!file_exists(STORAGE_PATH) && !mkdir($concurrentDirectory = STORAGE_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(LIBRARY_PATH) && !mkdir($concurrentDirectory = LIBRARY_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(CRASH_PATH) && !mkdir($concurrentDirectory = CRASH_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(PLUGINS_PATH) && !mkdir($concurrentDirectory = PLUGINS_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(SERVER_PLUGINS_PATH) && !mkdir($concurrentDirectory = SERVER_PLUGINS_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(PROXY_PLUGINS_PATH) && !mkdir($concurrentDirectory = PROXY_PLUGINS_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(CLOUD_PLUGINS_PATH) && !mkdir($concurrentDirectory = CLOUD_PLUGINS_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(SOFTWARE_PATH) && !mkdir($concurrentDirectory = SOFTWARE_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(IN_GAME_PATH) && !mkdir($concurrentDirectory = IN_GAME_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(WEB_PATH) && !mkdir($concurrentDirectory = WEB_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(LOG_PATH)) {
-    file_put_contents(LOG_PATH, "");
-}
-if (!file_exists(TEMPLATES_PATH) && !mkdir($concurrentDirectory = TEMPLATES_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(SERVER_GROUPS_PATH) && !mkdir($concurrentDirectory = SERVER_GROUPS_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
-if (!file_exists(TEMP_PATH) && !mkdir($concurrentDirectory = TEMP_PATH) && !is_dir($concurrentDirectory)) {
-    throw new \RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-}
+if (!file_exists(STORAGE_PATH)) mkdir(STORAGE_PATH);
+if (!file_exists(LIBRARY_PATH)) mkdir(LIBRARY_PATH);
+if (!file_exists(CRASH_PATH)) mkdir(CRASH_PATH);
+if (!file_exists(PLUGINS_PATH)) mkdir(PLUGINS_PATH);
+if (!file_exists(SERVER_PLUGINS_PATH)) mkdir(SERVER_PLUGINS_PATH);
+if (!file_exists(PROXY_PLUGINS_PATH)) mkdir(PROXY_PLUGINS_PATH);
+if (!file_exists(CLOUD_PLUGINS_PATH)) mkdir(CLOUD_PLUGINS_PATH);
+if (!file_exists(SOFTWARE_PATH)) mkdir(SOFTWARE_PATH);
+if (!file_exists(IN_GAME_PATH)) mkdir(IN_GAME_PATH);
+if (!file_exists(WEB_PATH)) mkdir(WEB_PATH);
+if (!file_exists(LOG_PATH)) file_put_contents(LOG_PATH, "");
+if (!file_exists(TEMPLATES_PATH)) mkdir(TEMPLATES_PATH);
+if (!file_exists(SERVER_GROUPS_PATH)) mkdir(SERVER_GROUPS_PATH);
+if (!file_exists(TEMP_PATH)) mkdir(TEMP_PATH);
 
 $classLoader = new ClassLoader();
 $classLoader->init();

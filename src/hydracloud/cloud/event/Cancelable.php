@@ -8,7 +8,5 @@ interface Cancelable {
 
     public function uncancel(): void;
 
-    public bool $cancelled {
-        get;
-    }
+    public function isCancelled(): bool;
 }

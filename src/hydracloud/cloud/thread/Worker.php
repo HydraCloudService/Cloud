@@ -11,15 +11,11 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 
 abstract class Worker extends NativeWorker {
 
-    private bool $running = false {
-        get {
-            return $this->running;
-        }
-    }
+    private bool $running = false;
     private ?ClassLoader $classLoader = null;
 
     public function start(int $options = self::INHERIT_NONE): bool {
-        $this->setClassLoader(HydraCloud::getInstance()?->getClassLoader());
+        $this->setClassLoader(HydraCloud::getInstance()->getClassLoader());
         $this->running = true;
         ThreadManager::getInstance()->add($this);
         return parent::start($options);
@@ -40,7 +36,7 @@ abstract class Worker extends NativeWorker {
 
         if(!$this->isShutdown()){
             $this->synchronized(function(): void {
-                while ($this->unstack() !== null) {}
+                while ($this->unstack() !== null);
             });
             $this->notify();
             $this->shutdown();
@@ -82,4 +78,7 @@ abstract class Worker extends NativeWorker {
         $this->classLoader = $classLoader;
     }
 
+    public function isRunning(): bool {
+        return $this->running;
+    }
 }

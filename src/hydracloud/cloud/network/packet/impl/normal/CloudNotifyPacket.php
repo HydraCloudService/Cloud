@@ -8,11 +8,7 @@ use hydracloud\cloud\network\packet\data\PacketData;
 
 final class CloudNotifyPacket extends CloudPacket {
 
-    public function __construct(private string $message = "" {
-        get {
-            return $this->message;
-        }
-    }) {}
+    public function __construct(private string $message = "") {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->message);
@@ -20,6 +16,10 @@ final class CloudNotifyPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->message = $packetData->readString();
+    }
+
+    public function getMessage(): string {
+        return $this->message;
     }
 
     public function handle(ServerClient $client): void {}

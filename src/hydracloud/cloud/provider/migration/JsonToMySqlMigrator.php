@@ -30,9 +30,7 @@ final class JsonToMySqlMigrator implements IMigrator {
                 FileUtils::copyFile(IN_GAME_PATH . "notifyList.json", $backupPath . "notifyList.json");
                 FileUtils::unlinkFile(IN_GAME_PATH . "notifyList.json");
                 foreach ($list as $player => $enabled) {
-                    if ($enabled) {
-                        CloudProvider::current()->enablePlayerNotifications($player);
-                    }
+                    if ($enabled) CloudProvider::current()->enablePlayerNotifications($player);
                 }
             }
         }
@@ -43,9 +41,7 @@ final class JsonToMySqlMigrator implements IMigrator {
                 FileUtils::copyFile(IN_GAME_PATH . "maintenanceList.json", $backupPath . "maintenanceList.json");
                 FileUtils::unlinkFile(IN_GAME_PATH . "maintenanceList.json");
                 foreach ($list as $player => $enabled) {
-                    if ($enabled) {
-                        CloudProvider::current()->addToWhitelist($player);
-                    }
+                    if ($enabled) CloudProvider::current()->addToWhitelist($player);
                 }
             }
         }
@@ -84,11 +80,8 @@ final class JsonToMySqlMigrator implements IMigrator {
                 foreach ($templates as $template) {
                     CloudProvider::current()->checkTemplate($template->getName())
                         ->then(function (bool $exists) use($template): void {
-                            if (!$exists) {
-                                CloudProvider::current()->addTemplate($template);
-                            } else {
-                                CloudLogger::get()->warn("A mysql template with the name §b" . $template->getName() . " §ralready exists, ignoring...");
-                            }
+                            if (!$exists) CloudProvider::current()->addTemplate($template);
+                            else CloudLogger::get()->warn("A mysql template with the name §b" . $template->getName() . " §ralready exists, ignoring...");
                         });
                 }
             }
@@ -101,19 +94,14 @@ final class JsonToMySqlMigrator implements IMigrator {
                 FileUtils::unlinkFile(SERVER_GROUPS_PATH . "groups.json");
                 $serverGroups = [];
                 foreach ($groupsRaw as $data) {
-                    if (($serverGroup = ServerGroup::fromArray($data)) !== null) {
-                        $serverGroups[$serverGroup->getName()] = $serverGroup;
-                    }
+                    if (($serverGroup = ServerGroup::fromArray($data)) !== null) $serverGroups[$serverGroup->getName()] = $serverGroup;
                 }
 
                 foreach ($serverGroups as $serverGroup) {
                     CloudProvider::current()->checkServerGroup($serverGroup->getName())
                         ->then(function (bool $exists) use($serverGroup): void {
-                            if (!$exists) {
-                                CloudProvider::current()->addServerGroup($serverGroup);
-                            } else {
-                                CloudLogger::get()->warn("A mysql server group with the name §b" . $serverGroup->getName() . " §ralready exists, ignoring...");
-                            }
+                            if (!$exists) CloudProvider::current()->addServerGroup($serverGroup);
+                            else CloudLogger::get()->warn("A mysql server group with the name §b" . $serverGroup->getName() . " §ralready exists, ignoring...");
                         });
                 }
             }

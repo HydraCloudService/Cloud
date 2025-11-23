@@ -8,34 +8,37 @@ final class WebAccount {
 
     public function __construct(
         private readonly string $name,
-        public string $password {
-            get {
-                return $this->password;
-            }
-            set {
-                $this->password = $value;
-            }
-        },
-        public bool $initialPassword {
-            get {
-                return $this->initialPassword;
-            }
-            set {
-                $this->initialPassword = $value;
-            }
-        },
-        public WebAccountRoles $role {
-            get {
-                return $this->role;
-            }
-            set(WebAccountRoles $value) {
-                $this->role = $value;
-            }
-        }
+        private string $password,
+        private bool $initialPassword,
+        private WebAccountRoles $role
     ) {}
+
+    public function setPassword(string $password): void {
+        $this->password = $password;
+    }
+
+    public function setInitialPassword(bool $initialPassword): void {
+        $this->initialPassword = $initialPassword;
+    }
+
+    public function setRole(WebAccountRoles $role): void {
+        $this->role = $role;
+    }
 
     public function getName(): string {
         return $this->name;
+    }
+
+    public function getPassword(): string {
+        return $this->password;
+    }
+
+    public function isInitialPassword(): bool {
+        return $this->initialPassword;
+    }
+
+    public function getRole(): WebAccountRoles {
+        return $this->role;
     }
 
     public function toArray(): array {
@@ -52,18 +55,9 @@ final class WebAccount {
     }
 
     public static function fromArray(array $data): ?self {
-        if (!Utils::containKeys($data, "username", "password", "initialPassword", "role")) {
-            return null;
-        }
-
-        if (($role = WebAccountRoles::get($data["role"])) === null) {
-            return null;
-        }
-
-        if (!is_bool($data["initialPassword"])) {
-            return null;
-        }
-
+        if (!Utils::containKeys($data, "username", "password", "initialPassword", "role")) return null;
+        if (($role = WebAccountRoles::get($data["role"])) === null) return null;
+        if (!is_bool($data["initialPassword"])) return null;
         return self::create($data["username"], $data["password"], $data["initialPassword"], $role);
     }
 }

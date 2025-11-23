@@ -7,7 +7,6 @@ use hydracloud\cloud\exception\ExceptionHandler;
 use hydracloud\cloud\HydraCloud;
 use hydracloud\cloud\provider\CloudProvider;
 use hydracloud\cloud\server\util\ServerUtils;
-use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\Utils;
 
@@ -16,56 +15,13 @@ final class MainConfig extends Configuration {
 
     /** @ignored */
     private string $generatedKey;
-    public int $memoryLimit = 512 {
-        get {
-            return $this->memoryLimit;
-        }
-        set {
-            $this->memoryLimit = $value;
-            ini_set("memory_limit", ($value < 0 ? "-1" : $value . "M"));
-        }
-    }
-    public string $language = "en_US" {
-        get {
-            return $this->language;
-        }
-        set {
-            $this->language = $value;
-        }
-    }
+    private int $memoryLimit = 512;
+    private string $language = "en_US";
     private string $provider = "json";
-    public bool $debugMode = false {
-        get {
-            return $this->debugMode;
-        }
-        set {
-            $this->debugMode = $value;
-        }
-    }
-    public bool $updateChecks = true {
-        get {
-            return $this->updateChecks;
-        }
-        set {
-            $this->updateChecks = $value;
-        }
-    }
-    public bool $executeUpdates = true {
-        get {
-            return $this->executeUpdates;
-        }
-        set {
-            $this->executeUpdates = $value;
-        }
-    }
-    public string $startMethod = "tmux" {
-        get {
-            return $this->startMethod;
-        }
-        set {
-            $this->startMethod = $value;
-        }
-    }
+    private bool $debugMode = false;
+    private bool $updateChecks = true;
+    private bool $executeUpdates = true;
+    private string $startMethod = "tmux";
     private array $network = [
         "port" => 3656,
         "encryption" => true,
@@ -94,11 +50,7 @@ final class MainConfig extends Configuration {
     private array $startCommands = [
         "server" => "%CLOUD_PATH%bin/php7/bin/php %SOFTWARE_PATH%PocketMine-MP.phar --no-wizard",
         "proxy" => "java -jar %SOFTWARE_PATH%Waterdog.jar"
-    ] {
-        get {
-            return $this->startCommands;
-        }
-    }
+    ];
 
     private array $serverTimeouts = [
         "server" => 15,
@@ -114,11 +66,7 @@ final class MainConfig extends Configuration {
             "start" => 19132,
             "end" => 20000
         ]
-    ] {
-        get {
-            return $this->serverPortRanges;
-        }
-    }
+    ];
 
     private int $serverPrepareThreads = 0; // By default, we are creating zero threads for that purpose to save some resources. Recommended to use if you've got more than 5 templates or 9 servers running at the same time
 
@@ -138,44 +86,28 @@ final class MainConfig extends Configuration {
         ExceptionHandler::tryCatch(function (array $defaultHttp, array $defaultNetwork, array $defaultWeb, array $defaultMySql, array $defaultStartCommands, array $defaultServerTimeouts, array $defaultServerPortRanges): void {
             $this->load();
             foreach (array_keys($defaultHttp) as $key) {
-                if (!isset($this->httpServer[$key])) {
-                    $this->httpServer[$key] = $defaultHttp[$key];
-                }
+                if (!isset($this->httpServer[$key])) $this->httpServer[$key] = $defaultHttp[$key];
             }
 
             foreach (array_keys($defaultNetwork) as $key) {
-                if (!isset($this->network[$key])) {
-                    $this->network[$key] = $defaultNetwork[$key];
-                }
+                if (!isset($this->network[$key])) $this->network[$key] = $defaultNetwork[$key];
             }
 
             foreach (array_keys($defaultWeb) as $key) {
-                if (!isset($this->web[$key])) {
-                    $this->web[$key] = $defaultWeb[$key];
-                }
+                if (!isset($this->web[$key])) $this->web[$key] = $defaultWeb[$key];
             }
 
             foreach (array_keys($defaultMySql) as $key) {
-                if (!isset($this->mysqlSettings[$key])) {
-                    $this->mysqlSettings[$key] = $defaultMySql[$key];
-                }
+                if (!isset($this->mysqlSettings[$key])) $this->mysqlSettings[$key] = $defaultMySql[$key];
             }
 
-            $startCommands = $this->startCommands;
             foreach (array_keys($defaultStartCommands) as $key) {
-                if (!isset($startCommands[$key])) {
-                    $startCommands[$key] = $defaultStartCommands[$key];
-                }
+                if (!isset($this->startCommands[$key])) $this->startCommands[$key] = $defaultStartCommands[$key];
             }
-            $this->startCommands = $startCommands;
 
-            $serverTimeouts = $this->serverTimeouts;
             foreach (array_keys($defaultServerTimeouts) as $key) {
-                if (!isset($this->serverTimeouts[$key])) {
-                    $serverTimeouts[$key] = $defaultServerTimeouts[$key];
-                }
+                if (!isset($this->serverTimeouts[$key])) $this->serverTimeouts[$key] = $defaultServerTimeouts[$key];
             }
-            $this->serverTimeouts = $serverTimeouts;
 
             if (!in_array(strtolower($this->startMethod), ["tmux", "screen"])) {
                 $this->startMethod = "tmux";
@@ -185,62 +117,71 @@ final class MainConfig extends Configuration {
                 $this->provider = "json";
             }
 
-            if ($this->serverPrepareThreads < 0) {
-                $this->serverPrepareThreads = 0;
-            } // If this is 0, server preparing remains inside the main-thread, therefore blocking it during the process
-            else if ($this->serverPrepareThreads > 5) {
-                $this->serverPrepareThreads = 5;
-            }
+            if ($this->serverPrepareThreads < 0) $this->serverPrepareThreads = 0; // If this is 0, server preparing remains inside the main-thread, therefore blocking it during the process
+            else if ($this->serverPrepareThreads > 5) $this->serverPrepareThreads = 5;
 
             foreach ($this->serverPortRanges as $key => $data) {
-                if (!is_array($data)) {
-                    $serverPortRanges = $this->serverPortRanges;
-                    $serverPortRanges[$key] = [];
-                    $this->serverPortRanges = $serverPortRanges;
-                }
-                if (!isset($data["start"])) {
-                    $this->serverPortRanges[$key]["start"] = random_int(40000, 41000);
-                }
-                if (!isset($data["end"])) {
-                    $this->serverPortRanges[$key]["end"] = random_int(41000, 42000);
-                }
+                if (!is_array($data)) $this->serverPortRanges[$key] = [];
+                if (!isset($data["start"])) $this->serverPortRanges[$key]["start"] = mt_rand(40000, 41000);
+                if (!isset($data["end"])) $this->serverPortRanges[$key]["end"] = mt_rand(41000, 42000);
 
                 $start = $this->serverPortRanges[$key]["start"];
                 $end = $this->serverPortRanges[$key]["end"];
 
                 if ($start <= 0 || $end <= 0) {
-                    HydraCloud::getInstance()?->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §7or §bend §7can not be less or equal to §b0§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §7or §bend §7can not be less or equal to §b0§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                     continue;
                 }
 
                 if ($start > $end) {
-                    HydraCloud::getInstance()?->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §ris §chigher §rthan §bend§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §ris §chigher §rthan §bend§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                     continue;
                 }
 
                 if (($start + 50) > $end) {
-                    HydraCloud::getInstance()?->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bEnd §rneeds to be at least §b50 ports higher §rthan §bstart§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bEnd §rneeds to be at least §b50 ports higher §rthan §bstart§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                 }
             }
 
             foreach (array_keys($defaultServerPortRanges) as $key) {
-                if (!isset($this->serverPortRanges[$key])) {
-                    $serverPortRanges = $this->serverPortRanges;
-                    $serverPortRanges[$key] = $defaultServerPortRanges[$key];
-                    $this->serverPortRanges = $serverPortRanges;
-                }
+                if (!isset($this->serverPortRanges[$key])) $this->serverPortRanges[$key] = $defaultServerPortRanges[$key];
             }
 
             $this->save();
-        }, "Failed to load main config", static fn() => HydraCloud::getInstance()?->shutdown(), $defaultHttp, $defaultNetwork, $defaultWeb, $defaultMySql, $defaultStartCommands, $defaultServerTimeouts, $defaultServerPortRanges);
+        }, "Failed to load main config", fn() => HydraCloud::getInstance()->shutdown(), $defaultHttp, $defaultNetwork, $defaultWeb, $defaultMySql, $defaultStartCommands, $defaultServerTimeouts, $defaultServerPortRanges);
+    }
+
+    public function setMemoryLimit(int $memoryLimit): void {
+        $this->memoryLimit = $memoryLimit;
+        ini_set("memory_limit", ($memoryLimit < 0 ? "-1" : $memoryLimit . "M"));
+    }
+
+    public function setLanguage(string $language): void {
+        $this->language = $language;
     }
 
     public function setProvider(string $provider): void {
         $this->provider = $provider;
         CloudProvider::select();
+    }
+
+    public function setDebugMode(bool $debugMode): void {
+        $this->debugMode = $debugMode;
+    }
+
+    public function setUpdateChecks(bool $updateChecks): void {
+        $this->updateChecks = $updateChecks;
+    }
+
+    public function setExecuteUpdates(bool $executeUpdates): void {
+        $this->executeUpdates = $executeUpdates;
+    }
+
+    public function setStartMethod(string $startMethod): void {
+        $this->startMethod = $startMethod;
     }
 
     public function setNetworkPort(int $port): void {
@@ -272,9 +213,7 @@ final class MainConfig extends Configuration {
     }
 
     public function setStartCommand(string $templateType, string $startCommand): void {
-        $startCommands = $this->startCommands;
-        $startCommands[strtolower($templateType)] = $startCommand;
-        $this->startCommands = $startCommands;
+        $this->startCommands[strtolower($templateType)] = $startCommand;
     }
 
     public function setServerTimeouts(string $templateType, int $timeout): void {
@@ -282,26 +221,42 @@ final class MainConfig extends Configuration {
     }
 
     public function setServerPortRange(string $templateType, int $start, int $end): void {
-        if ($end > 65535) {
-            $end = 65535;
-        }
-
-        $serverPortRanges = $this->serverPortRanges;
-        $serverPortRanges[strtolower($templateType)] = ["start" => $start, "end" => $end];
-        $this->serverPortRanges = $serverPortRanges;
+        if ($end > 65535) $end = 65535;
+        $this->serverPortRanges[strtolower($templateType)] = ["start" => $start, "end" => $end];
     }
 
     public function setServerPrepareThreads(int $serverPrepareThreads): void {
-        if ($serverPrepareThreads < 0) {
-            $serverPrepareThreads = 0;
-        } else if ($serverPrepareThreads > 5) {
-            $serverPrepareThreads = 5;
-        }
+        if ($serverPrepareThreads < 0) $serverPrepareThreads = 0;
+        else if ($serverPrepareThreads > 5) $serverPrepareThreads = 5;
         $this->serverPrepareThreads = $serverPrepareThreads;
+    }
+
+    public function getMemoryLimit(): int {
+        return $this->memoryLimit;
+    }
+
+    public function getLanguage(): string {
+        return $this->language;
     }
 
     public function getProvider(): string {
         return strtolower($this->provider);
+    }
+
+    public function isDebugMode(): bool {
+        return $this->debugMode;
+    }
+
+    public function isUpdateChecks(): bool {
+        return $this->updateChecks;
+    }
+
+    public function isExecuteUpdates(): bool {
+        return $this->executeUpdates;
+    }
+
+    public function getStartMethod(): string {
+        return $this->startMethod;
     }
 
     public function getNetworkPort(): int {
@@ -360,6 +315,10 @@ final class MainConfig extends Configuration {
         return $this->startCommands[strtolower($software)] ?? "";
     }
 
+    public function getStartCommands(): array {
+        return $this->startCommands;
+    }
+
     public function getServerTimeout(string $templateType): int {
         return $this->serverTimeouts[strtolower($templateType)] ?? ServerUtils::DEFAULT_TIMEOUT;
     }
@@ -370,6 +329,10 @@ final class MainConfig extends Configuration {
 
     public function getServerPortRange(string $templateType): ?array {
         return $this->serverPortRanges[strtolower($templateType)] ?? null;
+    }
+
+    public function getServerPortRanges(): array {
+        return $this->serverPortRanges;
     }
 
     public function getServerPrepareThreads(): int {

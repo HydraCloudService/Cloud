@@ -10,19 +10,13 @@ use hydracloud\cloud\template\Template;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\FileUtils;
 use hydracloud\cloud\util\SingletonTrait;
-use JsonException;
-use RuntimeException;
 
 final class ServerGroupManager {
     use SingletonTrait;
 
     /** @var array<ServerGroup> */
     private array $serverGroups = [];
-    public bool $loaded = false {
-        get {
-            return $this->loaded;
-        }
-    }
+    private bool $loaded = false;
 
     public function __construct() {
         self::setInstance($this);
@@ -40,12 +34,10 @@ final class ServerGroupManager {
         $startTime = microtime(true);
         CloudProvider::current()->addServerGroup($serverGroup);
 
-        new ServerGroupCreateEvent($serverGroup)->call();
+        (new ServerGroupCreateEvent($serverGroup))->call();
 
         CloudLogger::get()->debug("Creating directory: " . $serverGroup->getPath());
-        if (!file_exists($serverGroup->getPath()) && !mkdir($concurrentDirectory = $serverGroup->getPath()) && !is_dir($concurrentDirectory)) {
-            throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-        }
+        if (!file_exists($serverGroup->getPath())) mkdir($serverGroup->getPath());
         $this->serverGroups[$serverGroup->getName()] = $serverGroup;
         CloudLogger::get()->success("Successfully §acreated §rthe server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
     }
@@ -54,46 +46,46 @@ final class ServerGroupManager {
         $startTime = microtime(true);
         CloudProvider::current()->removeServerGroup($serverGroup);
 
-        new ServerGroupRemoveEvent($serverGroup)->call();
+        (new ServerGroupRemoveEvent($serverGroup))->call();
 
-        if (file_exists($serverGroup->getPath())) {
-            FileUtils::removeDirectory($serverGroup->getPath());
-        }
-        if (isset($this->serverGroups[$serverGroup->getName()])) {
-            unset($this->serverGroups[$serverGroup->getName()]);
-        }
+        if (file_exists($serverGroup->getPath())) FileUtils::removeDirectory($serverGroup->getPath());
+        if (isset($this->serverGroups[$serverGroup->getName()])) unset($this->serverGroups[$serverGroup->getName()]);
         CloudLogger::get()->success("Successfully §cremoved §rthe server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
     }
 
-    /**
-     * @throws JsonException
-     */
     public function addTemplate(ServerGroup $serverGroup, Template $template): void {
         $startTime = microtime(true);
         $serverGroup->add($template);
         CloudProvider::current()->editServerGroup($serverGroup, $serverGroup->toArray());
 
-        new ServerGroupEditEvent($serverGroup, $serverGroup->templates)->call();
+        (new ServerGroupEditEvent($serverGroup, $serverGroup->getTemplates()))->call();
 
         CloudLogger::get()->success("Successfully §aadded §rthe template §b" . $template->getName() . " §rto the server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
     }
 
-    /**
-     * @throws JsonException
-     */
     public function removeTemplate(ServerGroup $serverGroup, Template $template): void {
         $startTime = microtime(true);
         $serverGroup->remove($template);
         CloudProvider::current()->editServerGroup($serverGroup, $serverGroup->toArray());
 
-        new ServerGroupEditEvent($serverGroup, $serverGroup->templates)->call();
+        (new ServerGroupEditEvent($serverGroup, $serverGroup->getTemplates()))->call();
 
         CloudLogger::get()->success("Successfully §cremoved §rthe template §b" . $template->getName() . " §rfrom the server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
     }
 
     public function get(Template|string $name): ?ServerGroup {
         $name = $name instanceof Template ? $name->getName() : $name;
-        return $this->serverGroups[$name] ?? array_find($this->serverGroups, static fn($group) => $group->is($name));
+        if (isset($this->serverGroups[$name])) return $this->serverGroups[$name];
+
+        foreach ($this->serverGroups as $group) {
+            if ($group->is($name)) return $group;
+        }
+
+        return null;
+    }
+
+    public function isLoaded(): bool {
+        return $this->loaded;
     }
 
     public function getAll(): array {

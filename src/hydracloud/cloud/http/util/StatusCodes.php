@@ -4,7 +4,7 @@ namespace hydracloud\cloud\http\util;
 
 interface StatusCodes {
 	
-	public const array RESPOND_CODES = [
+	public const RESPOND_CODES = [
 		100 => "Continue",
 		101 => "Switch Protocols",
 		102 => "Processing",

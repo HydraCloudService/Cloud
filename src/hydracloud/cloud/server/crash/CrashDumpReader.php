@@ -2,32 +2,20 @@
 
 namespace hydracloud\cloud\server\crash;
 
-use JsonException;
 use RuntimeException;
 
 final class CrashDumpReader {
 
-    private string $filePath {
-        get {
-            return $this->filePath;
-        }
-    }
-    public ?array $data = null {
-        get {
-            return $this->data;
-        }
-    }
+    private string $filePath;
+    private ?array $data = null;
 
     public function __construct(string $filePath) {
         $this->filePath = $filePath;
         $this->readData();
     }
 
-    /**
-     * @throws JsonException
-     */
     private function readData(): void {
-        $fileHandle = fopen($this->filePath, 'rb');
+        $fileHandle = fopen($this->filePath, "r");
 
         $start = false;
         $end = false;
@@ -40,9 +28,9 @@ final class CrashDumpReader {
                 if ($line === "===END CRASH DUMP===") {
                     $end = true;
                     break;
+                } else {
+                    $data .= $line;
                 }
-
-                $data .= $line;
             } elseif ($line === "===BEGIN CRASH DUMP===") {
                 $start = true;
             }
@@ -53,7 +41,7 @@ final class CrashDumpReader {
         if ($start === true && $end === true && trim($data) !== "") {
             $data = base64_decode($data);
             $data = zlib_decode($data);
-            $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+            $data = json_decode($data, true);
             $this->data = $data;
         }
     }
@@ -62,15 +50,20 @@ final class CrashDumpReader {
         return is_array($this->data);
     }
 
+    public function getFilePath(): string {
+        return $this->filePath;
+    }
+
     public function getFileName(): string {
-        return basename($this->filePath);
+        return basename($this->getFilePath());
+    }
+
+    public function getData(): ?array {
+        return $this->data;
     }
 
     public function getCreationTime(): float {
-        if (!$this->hasRead()) {
-            throw new RuntimeException("No data was read");
-        }
-
+        if (!$this->hasRead()) throw new RuntimeException("No data was read");
         return (float) $this->data["time"];
     }
 }

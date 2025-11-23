@@ -3,37 +3,21 @@
 namespace hydracloud\cloud\scheduler;
 
 use hydracloud\cloud\plugin\CloudPlugin;
-use Random\RandomException;
 
 final class TaskHandler {
 
-    public int $id {
-        get {
-            return $this->id;
-        }
-    }
-    public bool $cancelled = false {
-        get {
-            return $this->cancelled;
-        }
-    }
+    private int $id;
+    private bool $cancelled = false;
     private int $last = 0;
 
-    /**
-     * @throws RandomException
-     */
     public function __construct(
         private readonly Task $task,
-        private int $delay {
-            get {
-                return $this->delay;
-            }
-        },
+        private int $delay,
         private readonly int $period,
         private readonly bool $repeat,
         private readonly CloudPlugin $owner
     ) {
-        $this->id = random_int(PHP_INT_MIN, PHP_INT_MAX);
+        $this->id = mt_rand(PHP_INT_MIN, PHP_INT_MAX);
     }
 
     public function cancel(): void {
@@ -43,15 +27,16 @@ final class TaskHandler {
         }
     }
 
+    public function isCancelled(): bool {
+        return $this->cancelled;
+    }
+
     public function onUpdate(int $tick): void {
         if ($this->delay > 0) {
-            if (--$this->delay === 0) {
+            if (--$this->delay == 0) {
                 $this->last = $tick;
                 $this->task->onRun();
-
-                if (!$this->isRepeat()) {
-                    $this->cancel();
-                }
+                if (!$this->isRepeat()) $this->cancel();
             }
             return;
         }
@@ -59,15 +44,20 @@ final class TaskHandler {
         if ($tick >= ($this->last + $this->period)) {
             $this->last = $tick;
             $this->task->onRun();
-
-            if (!$this->isRepeat()) {
-                $this->cancel();
-            }
+            if (!$this->isRepeat()) $this->cancel();
         }
+    }
+
+    public function getId(): int {
+        return $this->id;
     }
 
     public function getTask(): Task {
         return $this->task;
+    }
+
+    public function getDelay(): int {
+        return $this->delay;
     }
 
     public function getPeriod(): int {

@@ -72,25 +72,23 @@ class CloudServer {
     public function start(): void {
         CloudServerManager::getInstance()->addToProxies($this);
 
-        new ServerStartEvent($this)->call();
+        (new ServerStartEvent($this))->call();
         CloudLogger::get()->info("§aStarting §b" . $this->getName() . "§r...");
         NotifyType::STARTING()->send(["%server%" => $this->getName()]);
         ServerUtils::executeWithStartCommand($this->getPath(), $this->getName(), $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
     }
 
     public function stop(bool $force = false): void {
-        new ServerStopEvent($this, $force)->call();
+        (new ServerStopEvent($this, $force))->call();
         CloudLogger::get()->info("§cStopping §b" . $this->getName() . "§r...");
         NotifyType::STOPPING()->send(["%server%" => $this->getName()]);
         $this->setServerStatus(ServerStatus::STOPPING());
         $this->setStopTime(time());
 
         if ($force) {
-            if ($this->getCloudServerData()->processId !== 0) {
-                TerminalUtils::kill($this->getCloudServerData()->processId);
-            }
+            if ($this->getCloudServerData()->getProcessId() !== 0) TerminalUtils::kill($this->getCloudServerData()->getProcessId());
             $this->setServerStatus(ServerStatus::OFFLINE());
-            CloudServerManager::getInstance()->tick(HydraCloud::getInstance()->tick);
+            CloudServerManager::getInstance()->tick(HydraCloud::getInstance()->getTick());
         } else {
             DisconnectPacket::create(DisconnectReason::SERVER_SHUTDOWN())->sendPacket($this);
         }
@@ -134,18 +132,9 @@ class CloudServer {
             default => TemplateType::PROXY()->getServerTimeout()
         };
 
-        if ((time() - $this->startTime) < $timeout) {
-            return true;
-        }
-
-        if (!isset($this->lastCheckTime)) {
-            return false;
-        }
-
-        if ((time() - $this->lastCheckTime) < $timeout) {
-            return true;
-        }
-
+        if ((time() - $this->startTime) < $timeout) return true;
+        if (!isset($this->lastCheckTime)) return false;
+        if ((time() - $this->lastCheckTime) < $timeout) return true;
         return false;
     }
 
@@ -189,7 +178,8 @@ class CloudServer {
     }
 
     public function getCloudPlayer(string $name): ?CloudPlayer {
-        return array_find($this->getCloudPlayers(), static fn($player) => $player->getName() === $name);
+        foreach ($this->getCloudPlayers() as $player) if ($player->getName() == $name) return $player;
+        return null;
     }
 
     /** @return array<CloudPlayer> */
@@ -223,20 +213,13 @@ class CloudServer {
     public function sync(): void {
         $packets = [];
 
-        foreach (TemplateManager::getInstance()->getAll() as $template) {
-            $packets[] = TemplateSyncPacket::create($template, false);
-        }
-
+        foreach (TemplateManager::getInstance()->getAll() as $template) $packets[] = TemplateSyncPacket::create($template, false);
         foreach (CloudServerManager::getInstance()->getAll() as $server) {
             $packets[] = ServerSyncPacket::create($server, false);
-            if ($this->getTemplate()->getTemplateType()->isProxy() && $server->getTemplate()->getTemplateType()->isServer()) {
-                $packets[] = ProxyRegisterServerPacket::create($server->getName(), $server->getCloudServerData()->getPort());
-            }
+            if ($this->getTemplate()->getTemplateType()->isProxy() && $server->getTemplate()->getTemplateType()->isServer()) $packets[] = ProxyRegisterServerPacket::create($server->getName(), $server->getCloudServerData()->getPort());
         }
 
-        foreach (CloudPlayerManager::getInstance()->getAll() as $player) {
-            $packets[] = PlayerSyncPacket::create($player, false);
-        }
+        foreach (CloudPlayerManager::getInstance()->getAll() as $player) $packets[] = PlayerSyncPacket::create($player, false);
 
         if ($this->getTemplate()->getTemplateType()->isServer()) {
             $packets[] = ModuleSyncPacket::create();
@@ -245,12 +228,10 @@ class CloudServer {
 
         /** @var Language $lang */
         foreach (Language::getAll() as $lang) {
-            $packets[] = LanguageSyncPacket::create($lang->getName(), $lang->messages);
+            $packets[] = LanguageSyncPacket::create($lang->getName(), $lang->getMessages());
         }
 
-        foreach ($packets as $packet) {
-            $this->sendPacket($packet);
-        }
+        foreach ($packets as $packet) $this->sendPacket($packet);
     }
 
     public function toArray(): array {
@@ -259,8 +240,8 @@ class CloudServer {
             "id" => $this->id,
             "template" => $this->template,
             "port" => $this->getCloudServerData()->getPort(),
-            "maxPlayers" => $this->getCloudServerData()->maxPlayers,
-            "processId" => $this->getCloudServerData()->processId,
+            "maxPlayers" => $this->getCloudServerData()->getMaxPlayers(),
+            "processId" => $this->getCloudServerData()->getProcessId(),
             "serverStatus" => $this->getServerStatus()->getName()
         ];
     }
@@ -272,16 +253,10 @@ class CloudServer {
     }
 
     public static function fromArray(array $server): ?self {
-        if (!Utils::containKeys($server, "name", "id", "template", "port", "maxPlayers", "processId", "serverStatus")) {
-            return null;
-        }
-
-        if (($template = TemplateManager::getInstance()->get($server["template"])) === null) {
-            return null;
-        }
-
+        if (!Utils::containKeys($server, "name", "id", "template", "port", "maxPlayers", "processId", "serverStatus")) return null;
+        if (($template = TemplateManager::getInstance()->get($server["template"])) === null) return null;
         return new CloudServer(
-            (int)$server["id"],
+            intval($server["id"]),
             $template,
             new CloudServerData(intval($server["port"]), intval($server["maxPlayers"]), ($server["processId"] === null ? null : intval($server["processId"]))),
             ServerStatus::get($server["serverStatus"]) ?? ServerStatus::ONLINE()

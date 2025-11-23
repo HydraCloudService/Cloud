@@ -4,11 +4,7 @@ namespace hydracloud\cloud\event;
 
 trait CancelableTrait {
 
-    public bool $cancelled = false {
-        get {
-            return $this->cancelled;
-        }
-    }
+    private bool $cancelled = false;
 
     public function cancel(): void {
         $this->cancelled = true;
@@ -18,4 +14,7 @@ trait CancelableTrait {
         $this->cancelled = false;
     }
 
+    public function isCancelled(): bool {
+        return $this->cancelled;
+    }
 }

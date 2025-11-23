@@ -10,9 +10,7 @@ use hydracloud\cloud\web\WebAccountManager;
 final readonly class WebAccountArgument extends CommandArgument {
 
     public function parseValue(string $input): WebAccount {
-        if (($account = WebAccountManager::getInstance()->get($input)) !== null) {
-            return $account;
-        }
+        if (($account = WebAccountManager::getInstance()->get($input)) !== null) return $account;
         throw new ArgumentParseException();
     }
 

@@ -9,11 +9,7 @@ use hydracloud\cloud\network\packet\data\PacketData;
 
 final class ModuleSyncPacket extends CloudPacket {
 
-    private array $data {
-        get {
-            return $this->data;
-        }
-    }
+    private array $data;
 
     public function __construct() {
         $this->data = [
@@ -29,6 +25,10 @@ final class ModuleSyncPacket extends CloudPacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->data = $packetData->readArray();
+    }
+
+    public function getData(): array {
+        return $this->data;
     }
 
     public function handle(ServerClient $client): void {}

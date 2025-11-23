@@ -14,7 +14,7 @@ use Throwable;
 final class Language {
     use EnumTrait;
 
-    public const string FALLBACK = "en";
+    public const FALLBACK = "en";
 
     protected static function init(): void {
         self::register("german", new Language(
@@ -27,13 +27,13 @@ final class Language {
         self::register("english", new Language(
             "English",
             STORAGE_PATH . "en_US.yml",
-            ["en_US", "en", "English"],
+            ["en_US", "en", "Englisch"],
             DefaultMessages::MESSAGES
         ));
     }
 
     public static function current(): Language {
-        return self::get(MainConfig::getInstance()->language ?? self::FALLBACK);
+        return self::get(MainConfig::getInstance()->getLanguage() ?? self::FALLBACK);
     }
 
     public static function fallback(): Language {
@@ -42,15 +42,14 @@ final class Language {
 
     public static function get(string $name): ?Language {
         /** @var Language $language */
-        return array_find(self::getAll(), static fn($language) => $language->getName() === $name || in_array($name, $language->getAliases(), true));
+        foreach (self::getAll() as $language) {
+            if ($language->getName() == $name || in_array($name, $language->getAliases())) return $language;
+        }
+        return null;
     }
 
     /** @var array<string, string> */
-    public array $messages {
-        get {
-            return $this->messages;
-        }
-    }
+    private array $messages;
 
     public function __construct(
         private readonly string $name,
@@ -64,10 +63,7 @@ final class Language {
                 $foundMissingKeys = false;
                 foreach ($defaultMessages as $key => $value) {
                     if (!isset($this->messages[$key])) {
-                        $messages = $this->messages;
-                        $messages[$key] = $value;
-
-                        $this->messages = $messages;
+                        $this->messages[$key] = $value;
                         $foundMissingKeys = true;
                     }
                 }
@@ -88,9 +84,7 @@ final class Language {
 
     public function translate(string $key, mixed ...$params): string {
         $message = str_replace("{PREFIX}", $this->messages["inGame.prefix"] ?? "", $this->messages[$key] ?? $key);
-        foreach ($params as $i => $param) {
-            $message = str_replace("%" . $i . "%", $param, $message);
-        }
+        foreach ($params as $i => $param) $message = str_replace("%" . $i . "%", $param, $message);
         return $message;
     }
 
@@ -102,4 +96,7 @@ final class Language {
         return $this->aliases;
     }
 
+    public function getMessages(): array {
+        return $this->messages;
+    }
 }

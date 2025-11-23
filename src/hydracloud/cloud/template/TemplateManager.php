@@ -17,7 +17,6 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\FileUtils;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\tick\Tickable;
-use RuntimeException;
 
 final class TemplateManager implements Tickable {
     use SingletonTrait;
@@ -33,7 +32,7 @@ final class TemplateManager implements Tickable {
         CloudProvider::current()->getTemplates()
             ->then(function(array $templates): void {
                 $this->templates = $templates;
-                if (array_sum(array_map(static fn(Template $template) => $template->getSettings()->minServerCount, array_filter($this->templates, fn(Template $template) => $template->getSettings()->autoStart))) >= 9) {
+                if (array_sum(array_map(fn(Template $template) => $template->getSettings()->getMinServerCount(), array_filter($this->templates, fn(Template $template) => $template->getSettings()->isAutoStart()))) >= 9) {
                     CloudLogger::get()->warn("Your total active server count exceeds §b9§8, §rtherefore you should set §8'§bserverPrepareThreads§8' §rinside your §bconfig.json §rto at least §b1 §ror §b2 §rand restart the the §bcloud§r.");
                 }
                 ServerGroupManager::getInstance()->load();
@@ -44,14 +43,10 @@ final class TemplateManager implements Tickable {
         $startTime = microtime(true);
         CloudProvider::current()->addTemplate($template);
 
-        new TemplateCreateEvent($template)->call();
+        (new TemplateCreateEvent($template))->call();
 
         CloudLogger::get()->debug("Creating directory: " . $template->getPath());
-        if (!file_exists($template->getPath())) {
-            if (!mkdir($concurrentDirectory = $template->getPath()) && !is_dir($concurrentDirectory)) {
-                throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
-            }
-        }
+        if (!file_exists($template->getPath())) mkdir($template->getPath());
         ServerUtils::makeProperties($template);
         $this->templates[$template->getName()] = $template;
         CloudLogger::get()->success("Successfully §acreated §rthe template §b" . $template->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
@@ -62,34 +57,28 @@ final class TemplateManager implements Tickable {
         $startTime = microtime(true);
         CloudProvider::current()->removeTemplate($template);
 
-        new TemplateRemoveEvent($template)->call();
+        (new TemplateRemoveEvent($template))->call();
 
         CloudServerManager::getInstance()->stop($template, true);
 
-        if (file_exists($template->getPath())) {
-            FileUtils::removeDirectory($template->getPath());
-        }
-
-        if (isset($this->templates[$template->getName()])) {
-            unset($this->templates[$template->getName()]);
-        }
-
+        if (file_exists($template->getPath())) FileUtils::removeDirectory($template->getPath());
+        if (isset($this->templates[$template->getName()])) unset($this->templates[$template->getName()]);
         CloudLogger::get()->success("Successfully §cremoved §rthe template §b" . $template->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
         TemplateSyncPacket::create($template, true)->broadcastPacket();
     }
 
     public function edit(Template $template, ?bool $lobby, ?bool $maintenance, ?bool $static, ?int $maxPlayerCount, ?int $minServerCount, ?int $maxServerCount, ?float $startNewPercentage, ?bool $autoStart): void {
         $startTime = microtime(true);
-        $template->getSettings()->lobby = ($lobby ?? $template->getSettings()->lobby);
-        $template->getSettings()->maintenance = ($maintenance ?? $template->getSettings()->maintenance);
-        $template->getSettings()->static = ($static ?? $template->getSettings()->static);
-        $template->getSettings()->maxPlayerCount = ($maxPlayerCount ?? $template->getSettings()->maxPlayerCount);
-        $template->getSettings()->minServerCount = ($minServerCount ?? $template->getSettings()->minServerCount);
-        $template->getSettings()->maxServerCount = ($maxServerCount ?? $template->getSettings()->maxServerCount);
-        $template->getSettings()->startNewPercentage = ($startNewPercentage ?? $template->getSettings()->startNewPercentage);
-        $template->getSettings()->autoStart = ($autoStart ?? $template->getSettings()->autoStart);
+        $template->getSettings()->setLobby(($lobby === null ? $template->getSettings()->isLobby() : $lobby));
+        $template->getSettings()->setMaintenance(($maintenance === null ? $template->getSettings()->isMaintenance() : $maintenance));
+        $template->getSettings()->setStatic(($static === null ? $template->getSettings()->isStatic() : $static));
+        $template->getSettings()->setMaxPlayerCount(($maxPlayerCount === null ? $template->getSettings()->getMaxPlayerCount() : $maxPlayerCount));
+        $template->getSettings()->setMinServerCount(($minServerCount === null ? $template->getSettings()->getMinServerCount() : $minServerCount));
+        $template->getSettings()->setMaxServerCount(($maxServerCount === null ? $template->getSettings()->getMaxServerCount() : $maxServerCount));
+        $template->getSettings()->setStartNewPercentage(($startNewPercentage === null ? $template->getSettings()->getStartNewPercentage() : $startNewPercentage));
+        $template->getSettings()->setAutoStart(($autoStart === null ? $template->getSettings()->isAutoStart() : $autoStart));
 
-        new TemplateEditEvent($template, $lobby, $maintenance, $static, $maxPlayerCount, $minServerCount, $maxServerCount, $startNewPercentage, $autoStart)->call();
+        (new TemplateEditEvent($template, $lobby, $maintenance, $static, $maxPlayerCount, $minServerCount, $maxServerCount, $startNewPercentage, $autoStart))->call();
 
         CloudProvider::current()->editTemplate($template, $template->toArray());
 
@@ -110,22 +99,18 @@ final class TemplateManager implements Tickable {
     }
 
     public function tick(int $currentTick): void {
-        if (!ServerGroupManager::getInstance()->loaded) {
-            return;
-        }
-
-        foreach (self::getInstance()->getAll() as $template) {
-            if ($template->getSettings()->autoStart && ($running = count(CloudServerManager::getInstance()->getAll($template))) < $template->getSettings()->maxServerCount) {
-                CloudServerManager::getInstance()->start($template, ($template->getSettings()->minServerCount - $running));
+        if (!ServerGroupManager::getInstance()->isLoaded()) return;
+        foreach (TemplateManager::getInstance()->getAll() as $template) {
+            if ($template->getSettings()->isAutoStart()) {
+                if (($running = count(CloudServerManager::getInstance()->getAll($template))) < $template->getSettings()->getMaxServerCount()) {
+                    CloudServerManager::getInstance()->start($template, ($template->getSettings()->getMinServerCount() - $running));
+                }
             }
 
             if (($latest = CloudServerManager::getInstance()->getLatest($template)) !== null) {
                 $players = $latest->getCloudPlayerCount();
-                $requiredPercentage = $template->getSettings()->startNewPercentage;
-                if ($requiredPercentage <= 0) {
-                    continue;
-                }
-
+                $requiredPercentage = $template->getSettings()->getStartNewPercentage(); // xyz Prozent müssen von den max players on sein
+                if ($requiredPercentage <= 0) continue;
                 $percentage = $players * 100 / $requiredPercentage;
                 if ($percentage >= $requiredPercentage && CloudServerManager::getInstance()->canStartMore($template)) {
                     CloudServerManager::getInstance()->start($template);

@@ -32,7 +32,7 @@ final readonly class StringEnumArgument extends CommandArgument {
     }
 
     public function isAllowedString(string $string): bool {
-        return in_array($this->caseSensitive ? $string : strtolower($string), $this->allowedStrings, true);
+        return in_array($this->caseSensitive ? $string : strtolower($string), $this->allowedStrings);
     }
 
     public function isCaseSensitive(): bool {

@@ -28,7 +28,7 @@ final class StatusCommand extends Command {
             $playerCount
         ] = Utils::readCloudPerformanceStatus();
 
-        $threadNames = array_map(static fn(Thread|Worker $thread) => $thread::class, $threads);
+        $threadNames = array_map(fn(Thread|Worker $thread) => $thread::class, $threads);
 
         $sender->info("Current §bHydra§3Cloud §rperformance status:");
         $sender->info("Uptime: §c" . $this->formatUptime());
@@ -37,16 +37,14 @@ final class StatusCommand extends Command {
         $sender->info("Main thread memory peak: §c" . round(($mainMemoryPeak / 1024) / 1024, 2) . " MB");
         $sender->info("Total memory: §c" . round(($mainMemorySys / 1024) / 1024, 2) . " MB");
         $sender->info("Total memory peak: §c" . round(($mainMemorySysPeak / 1024) / 1024, 2) . " MB");
-        if ($memoryLimit > 0) {
-            $sender->info("Memory limit: §c" . round($memoryLimit, 2) . " MB");
-        }
-        $sender->info("Server count: §c" . $serverCount . " server" . ($serverCount === 1 ? "" : "s"));
-        $sender->info("Player count: §c" . $playerCount . " player" . ($playerCount === 1 ? "" : "s"));
+        if ($memoryLimit > 0) $sender->info("Memory limit: §c" . round($memoryLimit, 2) . " MB");
+        $sender->info("Server count: §c" . $serverCount . " server" . ($serverCount == 1 ? "" : "s"));
+        $sender->info("Player count: §c" . $playerCount . " player" . ($playerCount == 1 ? "" : "s"));
         return true;
     }
 
     private function formatUptime(): string {
-        $seconds = HydraCloud::getInstance()?->getUptime() ?? 0.0;
+        $seconds = HydraCloud::getInstance()->getUptime();
         $days = 0;
         $hours = 0;
         $minutes = 0;

@@ -10,11 +10,7 @@ use hydracloud\cloud\player\CloudPlayerManager;
 
 final class PlayerConnectPacket extends CloudPacket {
 
-    public function __construct(private ?CloudPlayer $player = null {
-        get {
-            return $this->player;
-        }
-    }) {}
+    public function __construct(private ?CloudPlayer $player = null) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->writePlayer($this->player);
@@ -24,14 +20,17 @@ final class PlayerConnectPacket extends CloudPacket {
         $this->player = $packetData->readPlayer();
     }
 
+    public function getPlayer(): ?CloudPlayer{
+        return $this->player;
+    }
+
     public function handle(ServerClient $client): void {
-        if ((($server = $client->getServer()) !== null) && CloudPlayerManager::getInstance()->get($this->player->getName()) === null) {
-            if ($server->getTemplate()->getTemplateType()->isServer()) {
-                $this->player->setCurrentServer($server);
-            } else {
-                $this->player->setCurrentProxy($server);
+        if (($server = $client->getServer()) !== null) {
+            if (CloudPlayerManager::getInstance()->get($this->player->getName()) === null) {
+                if ($server->getTemplate()->getTemplateType()->isServer()) $this->player->setCurrentServer($server);
+                else $this->player->setCurrentProxy($server);
+                CloudPlayerManager::getInstance()->add($this->player);
             }
-            CloudPlayerManager::getInstance()->add($this->player);
         }
     }
 

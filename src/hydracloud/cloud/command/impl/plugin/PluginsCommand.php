@@ -14,20 +14,14 @@ final class PluginsCommand extends Command {
 
     public function run(ICommandSender $sender, string $label, array $args): bool {
         $sender->info("Plugins §8(§b" . count(CloudPluginManager::getInstance()->getAll()) . "§8)§r:");
-        if (empty(CloudPluginManager::getInstance()->getAll())) {
-            $sender->info("No plugins.");
-        }
+        if (empty(CloudPluginManager::getInstance()->getAll())) $sender->info("No plugins.");
         foreach (CloudPluginManager::getInstance()->getAll() as $plugin) {
             $sender->info("Name: §b" . $plugin->getDescription()->getName());
-            if ($plugin->getDescription()->getDescription() !== null) {
-                $sender->info("Description: §b" . $plugin->getDescription()->getDescription());
-            }
+            if ($plugin->getDescription()->getDescription() !== null) $sender->info("Description: §b" . $plugin->getDescription()->getDescription());
             $sender->info("Version: §ev" . $plugin->getDescription()->getVersion());
-            if (!empty($plugin->getDescription()->getAuthors())) {
-                $sender->info("Author(s)=: §b" . implode(", ", $plugin->getDescription()->getAuthors()));
-            }
+            if (!empty($plugin->getDescription()->getAuthors())) $sender->info("Author(s)=: §b" . implode(", ", $plugin->getDescription()->getAuthors()));
             $sender->info("FullName: §b" . $plugin->getDescription()->getFullName());
-            $sender->info("Status: " . ($plugin->enabled ? "§aEnabled" : "§cDisabled"));
+            $sender->info("Status: " . ($plugin->isEnabled() ? "§aEnabled" : "§cDisabled"));
         }
         return true;
     }

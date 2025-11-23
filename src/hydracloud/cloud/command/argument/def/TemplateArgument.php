@@ -10,9 +10,7 @@ use hydracloud\cloud\template\TemplateManager;
 final readonly class TemplateArgument extends CommandArgument {
 
     public function parseValue(string $input): Template {
-        if (($template = TemplateManager::getInstance()->get($input)) !== null) {
-            return $template;
-        }
+        if (($template = TemplateManager::getInstance()->get($input)) !== null) return $template;
         throw new ArgumentParseException();
     }
 

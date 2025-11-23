@@ -12,11 +12,7 @@ use SplQueue;
 final class AsyncPool implements Tickable {
     use SingletonTrait;
 
-    private int $size = 10 {
-        get {
-            return $this->size;
-        }
-    }
+    private int $size = 10;
     private SleeperHandler $eventLoop;
 
     /** @var array<int, SplQueue<AsyncTask>> */
@@ -37,6 +33,10 @@ final class AsyncPool implements Tickable {
         }
     }
 
+    public function getSize(): int {
+        return $this->size;
+    }
+
     public function getRunningWorkers(): array {
         return array_keys($this->workers);
     }
@@ -44,7 +44,7 @@ final class AsyncPool implements Tickable {
     private function getWorker(int $worker): AsyncWorker {
         if (!isset($this->workers[$worker])) {
             $entry = $this->eventLoop->addNotifier(fn() => $this->collectTasksFromWorker($worker));
-            $this->workers[$worker] = $asyncWorker = new AsyncWorker($worker, MainConfig::getInstance()->memoryLimit, $entry);
+            $this->workers[$worker] = $asyncWorker = new AsyncWorker($worker, MainConfig::getInstance()->getMemoryLimit(), $entry);
             $asyncWorker->start(Thread::INHERIT_INI);
             $this->taskQueues[$worker] = new SplQueue();
         }
@@ -53,15 +53,9 @@ final class AsyncPool implements Tickable {
     }
 
     public function submitTaskToWorker(AsyncTask $task, int $worker): void {
-        if ($worker < 0 || $worker >= $this->size) {
-            return;
-        }
-
-        if($task->submitted) {
-            return;
-        }
-
-        $task->submitted = true;
+        if ($worker < 0 || $worker >= $this->size) return;
+        if($task->isSubmitted()) return;
+        $task->setSubmitted(true);
 
         $this->getWorker($worker)->stack($task);
         $this->taskQueues[$worker]->enqueue($task);
@@ -75,10 +69,7 @@ final class AsyncPool implements Tickable {
             if (($usage = $queue->count()) < $minUsage) {
                 $worker = $i;
                 $minUsage = $usage;
-
-                if ($usage === 0) {
-                    break;
-                }
+                if ($usage === 0) break;
             }
         }
 
@@ -96,9 +87,7 @@ final class AsyncPool implements Tickable {
     }
 
     public function submitTask(AsyncTask $task): int {
-        if($task->submitted) {
-            return -1;
-        }
+        if($task->isSubmitted()) return -1;
 
         $worker = $this->selectWorker();
         $this->submitTaskToWorker($task, $worker);
@@ -106,10 +95,9 @@ final class AsyncPool implements Tickable {
     }
 
     public function collectTasks(): bool {
-        foreach ($this->taskQueues as $worker => $queue) {
-            $this->collectTasksFromWorker($worker);
-        }
-        return array_any($this->taskQueues, static fn($queue) => !$queue->isEmpty());
+        foreach ($this->taskQueues as $worker => $queue) $this->collectTasksFromWorker($worker);
+        foreach ($this->taskQueues as $queue) if (!$queue->isEmpty()) return true;
+        return false;
     }
 
     public function collectTasksFromWorker(int $worker): bool {
@@ -132,7 +120,7 @@ final class AsyncPool implements Tickable {
     }
 
     public function getTaskQueueSizes(): array {
-        return array_map(static fn(SplQueue $queue) => $queue->count(), $this->taskQueues);
+        return array_map(fn(SplQueue $queue) => $queue->count(), $this->taskQueues);
     }
 
     public function shutdownUnusedWorkers(): int {

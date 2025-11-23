@@ -10,11 +10,7 @@ final class SocketClient extends ThreadSafe {
 
     protected ?Socket $socket = null;
 
-    public function __construct(public Address $address {
-        get {
-            return $this->address;
-        }
-    }) {}
+    public function __construct(protected Address $address) {}
 
     public static function fromSocket(Socket $socket): SocketClient {
         socket_getpeername($socket, $address, $port);
@@ -34,5 +30,9 @@ final class SocketClient extends ThreadSafe {
     public function close(): void {
         @socket_shutdown($this->socket);
         @socket_close($this->socket);
+    }
+
+    public function getAddress(): Address {
+        return $this->address;
     }
 }

@@ -19,14 +19,10 @@ final class Config {
     }
 
     public function load(): void {
-        if (!@file_exists($this->file)) {
-            $this->save();
-        }
+        if (!@file_exists($this->file)) $this->save();
 
         $fileContent = file_get_contents($this->file);
-        if (!$fileContent) {
-            return;
-        }
+        if (!$fileContent) return;
         ExceptionHandler::tryCatch(function () use($fileContent): void {
             $this->content = $this->configType->decodeContent($fileContent);
         });
@@ -34,7 +30,7 @@ final class Config {
 
     public function save(): void {
         if (!@file_exists(dirname($this->file . DIRECTORY_SEPARATOR))) {
-            ExceptionHandler::tryCatch(static fn() => throw new InvalidArgumentException("The given file path doesn't exists"));
+            ExceptionHandler::tryCatch(fn() => throw new InvalidArgumentException("The given file path doesn't exists"));
             return;
         }
 
@@ -60,11 +56,7 @@ final class Config {
         $content =& $this->content;
         while (count($keys) > 0) {
             $currentKey = array_shift($keys);
-
-            if (!isset($content[$currentKey])) {
-                $content[$currentKey] = [];
-            }
-
+            if (!isset($content[$currentKey])) $content[$currentKey] = [];
             $content =& $content[$currentKey];
         }
 
@@ -94,14 +86,9 @@ final class Config {
         $content =& $this->content;
         while (count($keys) > 0) {
             $currentKey = array_shift($keys);
-            if (!isset($content[$currentKey])) {
-                break;
-            }
-            if (is_array($content[$currentKey])) {
-                $content =& $content[$currentKey];
-            } else if (count($keys) === 0) {
-                unset($content[$currentKey]);
-            }
+            if (!isset($content[$currentKey])) break;
+            if (is_array($content[$currentKey])) $content =& $content[$currentKey];
+            else if (count($keys) == 0) unset($content[$currentKey]);
         }
 
         $this->changed = true;
@@ -112,22 +99,14 @@ final class Config {
     }
 
     public function hasNested(string $key): bool {
-        if (isset($this->content[$key])) {
-            return true;
-        }
-
+        if (isset($this->content[$key])) return true;
         $keys = explode(".", $key);
         $content =& $this->content;
         while (count($keys) > 0) {
             $currentKey = array_shift($keys);
-            if (!isset($content[$currentKey])) {
-                return false;
-            }
-            if (is_array($content[$currentKey])) {
-                $content =& $content[$currentKey];
-            } else if (count($keys) === 0) {
-                return true;
-            }
+            if (!isset($content[$currentKey])) return false;
+            if (is_array($content[$currentKey])) $content =& $content[$currentKey];
+            else if (count($keys) == 0) return true;
         }
 
         return false;
@@ -138,22 +117,14 @@ final class Config {
     }
 
     public function getNested(string $key, mixed $default = null): mixed {
-        if ($this->has($key)) {
-            return $this->get($key, $default);
-        }
-
+        if ($this->has($key)) return $this->get($key, $default);
         $keys = explode(".", $key);
         $content =& $this->content;
         while (count($keys) > 0) {
             $currentKey = array_shift($keys);
-            if (!isset($content[$currentKey])) {
-                return $default;
-            }
-            if (is_array($content[$currentKey])) {
-                $content =& $content[$currentKey];
-            } else if (count($keys) === 0) {
-                return $content[$currentKey];
-            }
+            if (!isset($content[$currentKey])) return $default;
+            if (is_array($content[$currentKey])) $content =& $content[$currentKey];
+            else if (count($keys) == 0) return $content[$currentKey];
         }
 
         return $default;

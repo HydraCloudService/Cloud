@@ -29,14 +29,16 @@ final class ServerClientCache implements Tickable {
 
     public function remove(ServerClient|CloudServer $client): void {
         $client = $client instanceof CloudServer ? $this->get($client) : $client;
-        if (($client !== null) && $this->isset($client)) {
-            CloudLogger::get()->debug("Removing client " . $client->getAddress());
-            unset($this->clients[array_search($client, $this->clients, true)]);
+        if ($client !== null) {
+            if ($this->isset($client)) {
+                CloudLogger::get()->debug("Removing client " . $client->getAddress());
+                unset($this->clients[array_search($client, $this->clients)]);
+            }
         }
     }
 
     public function isset(ServerClient $client): bool {
-        return in_array($client, $this->clients, true);
+        return in_array($client, $this->clients);
     }
 
     public function pick(Closure $conditionClosure): array {
@@ -44,21 +46,16 @@ final class ServerClientCache implements Tickable {
     }
 
     public function tick(int $currentTick): void {
-        $clientsWithDelayedPackets = array_filter($this->clients, static fn(ServerClient $client) => count($client->delayedPackets) > 0);
-        if (count($clientsWithDelayedPackets) === 0) {
-            return;
-        }
+        $clientsWithDelayedPackets = array_filter($this->clients, fn(ServerClient $client) => count($client->getDelayedPackets()) > 0);
+        if (count($clientsWithDelayedPackets) == 0) return;
         foreach ($clientsWithDelayedPackets as $client) {
-            foreach ($client->delayedPackets as $i => $data) {
+            foreach ($client->getDelayedPackets() as $i => $data) {
                 $packet = $data[0];
-                if ($data[1] <= $currentTick) {
+                $tick = $data[1];
+                if ($tick <= $currentTick) {
                     $sendClosure = $data[2] ?? null;
                     $success = $client->sendPacket($packet);
-
-                    if ($sendClosure !== null) {
-                        ($sendClosure)($client, $packet, $success);
-                    }
-
+                    if ($sendClosure !== null) ($sendClosure)($client, $packet, $success);
                     $client->unsetDelayedPacket($i);
                 }
             }
@@ -70,11 +67,12 @@ final class ServerClientCache implements Tickable {
     }
 
     public function getServer(ServerClient $client): ?CloudServer {
-        return $this->isset($client) ? CloudServerManager::getInstance()->get(array_search($client, $this->clients, true)) : null;
+        return $this->isset($client) ? CloudServerManager::getInstance()->get(array_search($client, $this->clients)) : null;
     }
 
     public function getByAddress(Address $address): ?ServerClient {
-        return array_find($this->clients, static fn($client) => $client->getAddress()->equals($address));
+        foreach ($this->clients as $client) if ($client->getAddress()->equals($address)) return $client;
+        return null;
     }
 
     public function getAll(): array {

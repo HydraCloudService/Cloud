@@ -14,7 +14,7 @@ class Raw
     /**
      * The raw string.
      *
-     * @var array
+     * @var string
      */
     public array $value;
 }

@@ -16,7 +16,7 @@ final class CloudTemplateListEndPoint extends EndPoint {
     }
 
     public function handleRequest(Request $request, Response $response): array {
-        return array_values(array_map(static fn(Template $template) => $template->getName(), TemplateManager::getInstance()->getAll()));
+        return array_values(array_map(fn(Template $template) => $template->getName(), TemplateManager::getInstance()->getAll()));
     }
 
     public function isBadRequest(Request $request): bool {

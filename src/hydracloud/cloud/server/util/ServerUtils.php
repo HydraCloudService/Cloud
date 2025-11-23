@@ -9,15 +9,14 @@ use hydracloud\cloud\server\CloudServer;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\util\FileUtils;
-use Random\RandomException;
 
 final class ServerUtils {
 
-    public const int DEFAULT_TIMEOUT = 20;
-    public const int TIMEOUT_SERVER = 20;
-    public const int TIMEOUT_PROXY = 25;
+    public const DEFAULT_TIMEOUT = 20;
+    public const TIMEOUT_SERVER = 20;
+    public const TIMEOUT_PROXY = 25;
 
-    public const array PROPERTY_KEYS = [
+    public const PROPERTY_KEYS = [
         "SERVER" => [
             "language" => "eng",
             "motd" => "§b%name%",
@@ -105,7 +104,7 @@ final class ServerUtils {
 
     public static function addId(Template $template, int $id): void {
         if (isset(self::$ids[$template->getName()])) {
-            if (!in_array($id, self::$ids[$template->getName()], true)) {
+            if (!in_array($id, self::$ids[$template->getName()])) {
                 self::$ids[$template->getName()][] = $id;
             }
         } else {
@@ -114,47 +113,37 @@ final class ServerUtils {
     }
 
     public static function removeId(Template $template, int $id): void {
-        if (isset(self::$ids[$template->getName()]) && in_array($id, self::$ids[$template->getName()], true)) {
-            unset(self::$ids[$template->getName()][array_search($id, self::$ids[$template->getName()], true)]);
+        if (isset(self::$ids[$template->getName()])) {
+            if (in_array($id, self::$ids[$template->getName()])) {
+                unset(self::$ids[$template->getName()][array_search($id, self::$ids[$template->getName()])]);
+            }
         }
     }
 
     public static function getFreeId(Template $template): int {
-        if (!isset(self::$ids[$template->getName()])) {
-            self::$ids[$template->getName()] = [];
-        }
-
-        for ($i = 1; $i < ($template->getSettings()->maxServerCount + 1); $i++) {
-            if (!in_array($i, self::$ids[$template->getName()], true)) {
-                return $i;
-            }
+        if (!isset(self::$ids[$template->getName()])) self::$ids[$template->getName()] = [];
+        for ($i = 1; $i < ($template->getSettings()->getMaxServerCount() + 1); $i++) {
+            if (!in_array($i, self::$ids[$template->getName()])) return $i;
         }
         return -1;
     }
 
     public static function addPort(int $port): void {
-        if (!in_array($port, self::$usedPorts, true)) {
-            self::$usedPorts[] = $port;
-        }
+        if (!in_array($port, self::$usedPorts)) self::$usedPorts[] = $port;
     }
 
     public static function removePort(int $port): void {
-        if (in_array($port, self::$usedPorts, true)) {
-            unset(self::$usedPorts[array_search($port, self::$usedPorts, true)]);
-        }
+        if (in_array($port, self::$usedPorts)) unset(self::$usedPorts[array_search($port, self::$usedPorts)]);
     }
 
-    /**
-     * @throws RandomException
-     */
     public static function getFreePort(): int {
         [$start, $end] = array_values(TemplateType::SERVER()->getServerPortRange());
         while (true) {
-            $port = random_int($start ?? 40000, $end ?? 65535);
+            $port = mt_rand($start ?? 40000, $end ?? 65535);
             $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
             $state = socket_connect($socket, "127.0.0.1", $port);
 
-            if (!in_array([$port, $port + 1], self::$usedPorts, true) && $state) {
+            if (!in_array([$port, $port+1], self::$usedPorts) && $state) {
                 socket_close($socket);
                 break;
             }
@@ -165,24 +154,20 @@ final class ServerUtils {
     public static function getFreeProxyPort(): int {
         [$start, $end] = array_values(TemplateType::PROXY()->getServerPortRange());
         for ($i = ($start ?? 19132); $i < ($end ?? 20000); $i++) {
-            if (in_array($i, self::$usedPorts, true)) {
+            if (in_array($i, self::$usedPorts)) {
                 continue;
+            } else {
+                return $i;
             }
-
-            return $i;
         }
         return 0;
     }
 
     public static function makeProperties(Template $template): void {
         $fileName = ($template->getTemplateType() === TemplateType::SERVER() ? "server.properties" : "config.yml");
-        if ($fileName === "server.properties") {
+        if ($fileName == "server.properties") {
             $config = new Config($template->getPath() . $fileName, ConfigTypes::PROPERTIES());
-
-            foreach (self::PROPERTY_KEYS[$template->getTemplateType()->getName()] as $key => $value) {
-                $config->set($key, $value);
-            }
-
+            foreach (self::PROPERTY_KEYS[$template->getTemplateType()->getName()] as $key => $value) $config->set($key, $value);
             $config->save();
         } else {
             file_put_contents($template->getPath() . $fileName, str_replace("'", "", yaml_emit(self::PROPERTY_KEYS[$template->getTemplateType()->getName()], YAML_UTF8_ENCODING)));
@@ -191,33 +176,22 @@ final class ServerUtils {
 
     public static function copyProperties(CloudServer $server): void {
         $fileName = ($server->getTemplate()->getTemplateType() === TemplateType::SERVER() ? "server.properties" : "config.yml");
-
-        if (!file_exists($server->getTemplate()->getPath() . $fileName)) {
-            self::makeProperties($server->getTemplate());
-        }
-
-        if (file_exists($server->getPath() . $fileName)) {
-            unlink($server->getPath() . $fileName);
-        }
-
+        if (!file_exists($server->getTemplate()->getPath() . $fileName)) self::makeProperties($server->getTemplate());
+        if (file_exists($server->getPath() . $fileName)) unlink($server->getPath() . $fileName);
         FileUtils::copyFile($server->getTemplate()->getPath() . $fileName, $server->getPath() . $fileName);
         $content = file_get_contents($server->getPath() . $fileName);
-
-        if ($content === false) {
-            return;
-        }
-
+        if ($content === false) return;
         file_put_contents($server->getPath() . $fileName, str_replace(
             ["%max_players%", "%server_port%", "%server_portv6%", "%name%", "%template%", "%port%", "%encryption%", "%language%", "%cloud_path%"],
             [
-                $server->getCloudServerData()->maxPlayers,
+                $server->getCloudServerData()->getMaxPlayers(),
                 $server->getCloudServerData()->getPort(),
                 $server->getCloudServerData()->getPort()+1,
                 $server->getName(),
                 $server->getTemplate()->getName(),
                 MainConfig::getInstance()->getNetworkPort(),
                 ($server->getTemplate()->getTemplateType()->isServer() ? (MainConfig::getInstance()->isNetworkEncryptionEnabled() ? "on" : "off") : (MainConfig::getInstance()->isNetworkEncryptionEnabled() ? "true" : "false")),
-                MainConfig::getInstance()->language,
+                MainConfig::getInstance()->getLanguage(),
                 CLOUD_PATH
             ],
             $content
@@ -226,30 +200,28 @@ final class ServerUtils {
 
     public static function getProperties(Template $template): Config {
         $fileName = ($template->getTemplateType() === TemplateType::SERVER() ? "server.properties" : "config.yml");
-
-        if (!file_exists($template->getPath() . $fileName)) {
-            self::makeProperties($template);
-        }
-
-        return new Config($template->getPath() . $fileName, ($fileName === "server.properties" ? ConfigTypes::PROPERTIES() : ConfigTypes::YAML()));
+        if (!file_exists($template->getPath() . $fileName)) self::makeProperties($template);
+        return new Config($template->getPath() . $fileName, ($fileName == "server.properties" ? ConfigTypes::PROPERTIES() : ConfigTypes::YAML()));
     }
 
     public static function detectStartMethod(): bool {
-        if (PHP_OS_FAMILY === "Linux") {
+        if (PHP_OS_FAMILY == "Linux") {
             if (self::checkTmux()) {
-                if ((MainConfig::getInstance()->startMethod === "screen") && self::checkScreen()) {
-                    self::$startCommand = "screen -dmS %name% %start_command%";
-                    return true;
+                if (MainConfig::getInstance()->getStartMethod() == "screen") {
+                    if (self::checkScreen()) {
+                        self::$startCommand = "screen -dmS %name% %start_command%";
+                        return true;
+                    }
                 }
 
                 self::$startCommand = "tmux new-session -d -s %name% bash -c '%start_command%'";
                 return true;
-            }
-
-            if (self::checkScreen()) {
-                if ((MainConfig::getInstance()->startMethod === "tmux") && self::checkTmux()) {
-                    self::$startCommand = "tmux new-session -d -s %name% bash -c '%start_command%'";
-                    return true;
+            } else if (self::checkScreen()) {
+                if (MainConfig::getInstance()->getStartMethod() == "tmux") {
+                    if (self::checkTmux()) {
+                        self::$startCommand = "tmux new-session -d -s %name% bash -c '%start_command%'";
+                        return true;
+                    }
                 }
 
                 self::$startCommand = "screen -dmS %name% %start_command%";
@@ -260,14 +232,12 @@ final class ServerUtils {
     }
 
     public static function executeWithStartCommand(string $path, string $name, string $softwareStartCommand): void {
-        if (self::$startCommand === "") {
-            return;
-        }
+        if (self::$startCommand == "") return;
         passthru("cd " . $path . " && " . str_replace(["%name%", "%start_command%", "%SOFTWARE_PATH%", "%CLOUD_PATH%"], [$name, $softwareStartCommand, SOFTWARE_PATH, CLOUD_PATH], self::$startCommand));
     }
 
     public static function checkTmux(): bool {
-        if (PHP_OS_FAMILY === "Linux") {
+        if (PHP_OS_FAMILY == "Linux") {
             $output = shell_exec(sprintf("which %s", escapeshellarg("tmux")));
             return $output !== null && $output !== false;
         }
@@ -275,7 +245,7 @@ final class ServerUtils {
     }
 
     public static function checkScreen(): bool {
-        if (PHP_OS_FAMILY === "Linux") {
+        if (PHP_OS_FAMILY == "Linux") {
             $output = shell_exec(sprintf("which %s", escapeshellarg("screen")));
             return $output !== null && $output !== false;
         }
@@ -283,7 +253,7 @@ final class ServerUtils {
     }
 
     public static function checkJava(): bool {
-        if (PHP_OS_FAMILY === "Linux") {
+        if (PHP_OS_FAMILY == "Linux") {
             $output = shell_exec(sprintf("which %s", escapeshellarg("java")));
             return $output !== null && $output !== false;
         }
@@ -291,16 +261,12 @@ final class ServerUtils {
     }
 
     public static function checkBinary(): bool {
-        return self::getBinaryPath() !== "";
+        return self::getBinaryPath() != "";
     }
 
     public static function getBinaryPath(): string {
         $path = "";
-
-        if (file_exists(CLOUD_PATH . "bin/php7/bin/php")) {
-            $path = CLOUD_PATH . "bin/php7/bin/php";
-        }
-
+        if (file_exists(CLOUD_PATH . "bin/php7/bin/php")) $path = CLOUD_PATH . "bin/php7/bin/php";
         return $path;
     }
 }

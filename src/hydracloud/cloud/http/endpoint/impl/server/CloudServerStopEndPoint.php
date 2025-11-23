@@ -21,14 +21,10 @@ final class CloudServerStopEndPoint extends EndPoint {
         if (($server = CloudServerManager::getInstance()->get($identifier)) !== null) {
             CloudServerManager::getInstance()->stop($server);
             return ["success" => "The server was successfully stopped!"];
-        }
-
-        if (($template = TemplateManager::getInstance()->get($identifier)) !== null) {
+        } else if (($template = TemplateManager::getInstance()->get($identifier)) !== null) {
             CloudServerManager::getInstance()->stop($template);
             return ["success" => "The template was successfully stopped!"];
-        }
-
-        if (strtolower($identifier) === "all") {
+        } else if (strtolower($identifier) == "all") {
             CloudServerManager::getInstance()->stopAll();
             return ["success" => "All servers have been successfully stopped!"];
         }

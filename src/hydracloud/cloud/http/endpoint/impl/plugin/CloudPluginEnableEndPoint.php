@@ -20,7 +20,7 @@ final class CloudPluginEnableEndPoint extends EndPoint {
             return ["error" => "Plugin wasn't found!"];
         }
 
-        if ($plugin->enabled) {
+        if ($plugin->isEnabled()) {
             return ["error" => "Plugin is already enabled!"];
         }
 

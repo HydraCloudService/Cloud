@@ -9,11 +9,7 @@ use hydracloud\cloud\network\packet\ResponsePacket;
 final class ServerHandshakeResponsePacket extends ResponsePacket {
 
     public function __construct(
-        private ?VerifyStatus $verifyStatus = null {
-            get {
-                return $this->verifyStatus;
-            }
-        },
+        private ?VerifyStatus $verifyStatus = null,
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -22,6 +18,10 @@ final class ServerHandshakeResponsePacket extends ResponsePacket {
 
     public function decodePayload(PacketData $packetData): void {
         $this->verifyStatus = $packetData->readVerifyStatus();
+    }
+
+    public function getVerifyStatus(): ?VerifyStatus {
+        return $this->verifyStatus;
     }
 
     public static function create(VerifyStatus $verifyStatus): self {

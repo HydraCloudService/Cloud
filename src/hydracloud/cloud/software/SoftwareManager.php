@@ -40,10 +40,7 @@ final class SoftwareManager {
     }
 
     public function removeAndDownload(Software $software): void {
-        if (file_exists(SOFTWARE_PATH . $software->getFileName())) {
-            @unlink(SOFTWARE_PATH . $software->getFileName());
-        }
-
+        if (file_exists(SOFTWARE_PATH . $software->getFileName())) @unlink(SOFTWARE_PATH . $software->getFileName());
         $this->download($software);
     }
 
@@ -68,7 +65,10 @@ final class SoftwareManager {
     }
 
     public function get(string $name): ?Software {
-        return array_find($this->software, static fn($software) => $software->getName() === $name || in_array($name, $software->getAliases(), true));
+        foreach ($this->software as $software) {
+            if ($software->getName() == $name || in_array($name, $software->getAliases())) return $software;
+        }
+        return null;
     }
 
     public function getAll(): array {

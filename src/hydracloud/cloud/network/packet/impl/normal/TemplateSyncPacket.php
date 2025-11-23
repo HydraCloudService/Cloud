@@ -10,16 +10,8 @@ use hydracloud\cloud\template\Template;
 final class TemplateSyncPacket extends CloudPacket {
 
     public function __construct(
-        private ?Template $template = null {
-            get {
-                return $this->template;
-            }
-        },
-        private bool $removal = false {
-            get {
-                return $this->removal;
-            }
-        }
+        private ?Template $template = null,
+        private bool $removal = false
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -30,6 +22,14 @@ final class TemplateSyncPacket extends CloudPacket {
     public function decodePayload(PacketData $packetData): void {
         $this->template = $packetData->readTemplate();
         $this->removal = $packetData->readBool();
+    }
+
+    public function getTemplate(): ?Template {
+        return $this->template;
+    }
+
+    public function isRemoval(): bool {
+        return $this->removal;
     }
 
     public function handle(ServerClient $client): void {}

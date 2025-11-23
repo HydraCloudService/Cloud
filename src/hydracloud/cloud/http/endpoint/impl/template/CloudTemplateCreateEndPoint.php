@@ -23,23 +23,14 @@ final class CloudTemplateCreateEndPoint extends EndPoint {
         $lobby = $this->bool($request->data()->queries()->get("lobby", "no"));
         $maintenance = $this->bool($request->data()->queries()->get("maintenance", "yes"));
         $static = $this->bool($request->data()->queries()->get("static", "no"));
-        $maxPlayerCount = ($request->data()->queries()->has("maxPlayerCount") ? (int)$request->data()->queries()->get("maxPlayerCount") : 20);
-        $minServerCount = ($request->data()->queries()->has("minServerCount") ? (int)$request->data()->queries()->get("minServerCount") : 0);
-        $maxServerCount = ($request->data()->queries()->has("maxServerCount") ? (int)$request->data()->queries()->get("maxServerCount") : 2);
-        $startNewPercentage = ($request->data()->queries()->has("startNewPercentage") ? (float)$request->data()->queries()->get("startNewPercentage") : 0);
+        $maxPlayerCount = ($request->data()->queries()->has("maxPlayerCount") ? intval($request->data()->queries()->get("maxPlayerCount")) : 20);
+        $minServerCount = ($request->data()->queries()->has("minServerCount") ? intval($request->data()->queries()->get("minServerCount")) : 0);
+        $maxServerCount = ($request->data()->queries()->has("maxServerCount") ? intval($request->data()->queries()->get("maxServerCount")) : 2);
+        $startNewPercentage = ($request->data()->queries()->has("startNewPercentage") ? floatval($request->data()->queries()->get("startNewPercentage")) : 0);
         $autoStart = $this->bool($request->data()->queries()->get("autoStart"));
-
-        if ($maxPlayerCount < 0) {
-            $maxPlayerCount = 20;
-        }
-
-        if ($minServerCount < 0) {
-            $minServerCount = 0;
-        }
-
-        if ($maxServerCount < 0) {
-            $maxServerCount = 2;
-        }
+        if ($maxPlayerCount < 0) $maxPlayerCount = 20;
+        if ($minServerCount < 0) $minServerCount = 0;
+        if ($maxServerCount < 0) $maxServerCount = 2;
 
         if (TemplateManager::getInstance()->get($name) !== null) {
             return ["error" => "The template already exists!"];
@@ -54,6 +45,7 @@ final class CloudTemplateCreateEndPoint extends EndPoint {
     }
 
     private function bool(string $value): bool {
-        return $value === "true" || $value === "on" || $value === "yes";
+        if ($value == "true" || $value == "on" || $value == "yes") return true;
+        return false;
     }
 }

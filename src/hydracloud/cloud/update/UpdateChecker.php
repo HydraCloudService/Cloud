@@ -17,14 +17,7 @@ use hydracloud\cloud\util\VersionInfo;
 final class UpdateChecker {
     use SingletonTrait;
 
-    private array $data = [] {
-        get {
-            return $this->data;
-        }
-        set {
-            $this->data = $value;
-        }
-    }
+    private array $data = [];
 
     public function __construct() {
         self::setInstance($this);
@@ -39,7 +32,7 @@ final class UpdateChecker {
     }
 
     private function checkCloud(): void {
-        AsyncExecutor::execute(static function(): false|string|null {
+        AsyncExecutor::execute(function(): false|string|null {
             try {
                 $ch = curl_init("https://api.github.com/repos/HydraCloudService/Cloud/releases/latest");
                 curl_setopt_array($ch, [
@@ -55,18 +48,15 @@ final class UpdateChecker {
                 $data = json_decode($result, true, flags: JSON_THROW_ON_ERROR);
                 if ($data === false || $data === null) {
                     return false;
+                } else {
+                    if (isset($data["message"]) && str_contains($data["message"], "API rate limit")) return null;
+                    return $data["tag_name"] ?? false;
                 }
-
-                if (isset($data["message"]) && str_contains($data["message"], "API rate limit")) {
-                    return null;
-                }
-
-                return $data["tag_name"] ?? false;
             } catch (JsonException $e) {
                 CloudLogger::get()->exception($e);
                 return false;
             }
-        }, static function(null|string|false $result): void {
+        }, function(null|string|false $result): void {
             if ($result === false) {
                 CloudLogger::get()->error("§cError occurred while checking for new updates!");
             } else if ($result === null) {
@@ -79,30 +69,30 @@ final class UpdateChecker {
 
                 $i = 0;
                 foreach ($current as $number) {
-                    if ((int)$latest[$i] > (int)$number) {
+                    if (intval($latest[$i]) > intval($number)) {
                         $outdated = true;
                         break;
-                    }
-
-                    if ((int)$number > (int)$latest[$i]) {
+                    } else if (intval($number) > intval($latest[$i])) {
                         $highVersion = !VersionInfo::isBeta();
                         break;
                     }
                     $i++;
                 }
 
-                UpdateChecker::getInstance()->data = ["outdated" => $outdated, "newest_version" => $result];
+                UpdateChecker::getInstance()->setData(["outdated" => $outdated, "newest_version" => $result]);
 
                 if ($outdated) {
                     CloudLogger::get()->warn("§cYour version of §bHydra§3Cloud §cis outdated! Please install the newest version from §8'§bgithub.com/HydraCloudService/Cloud/releases/latest§8'§c!");
                     CloudLogger::get()->warn("§cYour Version: §e" . VersionInfo::VERSION . " §8| §cLatest Version: §e" . $result);
                     CloudLogger::get()->warn("§cAlso make sure that the plugins are up to date!");
-                } else if ($highVersion) {
-                    CloudLogger::get()->warn("§cYour version of §bHydra§3Cloud §cis too HIGH! Please install the latest version from §8'§bgithub.com/HydraCloudService/Cloud/releases/latest§8'§c!");
-                    CloudLogger::get()->warn("§cYour Version: §e" . VersionInfo::VERSION . " §8| §cLatest Version: §e" . $result);
-                    CloudLogger::get()->warn("§cAlso make sure that the plugins are up to date!");
                 } else {
-                    CloudLogger::get()->info("§rYour version of §bHydra§3Cloud §ris §aup to date§r!");
+                    if ($highVersion) {
+                        CloudLogger::get()->warn("§cYour version of §bHydra§3Cloud §cis too HIGH! Please install the latest version from §8'§bgithub.com/HydraCloudService/Cloud/releases/latest§8'§c!");
+                        CloudLogger::get()->warn("§cYour Version: §e" . VersionInfo::VERSION . " §8| §cLatest Version: §e" . $result);
+                        CloudLogger::get()->warn("§cAlso make sure that the plugins are up to date!");
+                    } else {
+                        CloudLogger::get()->info("§rYour version of §bHydra§3Cloud §ris §aup to date§r!");
+                    }
                 }
             }
         });
@@ -127,13 +117,13 @@ final class UpdateChecker {
                 $phar = new Phar(SERVER_PLUGINS_PATH . "CloudBridge.phar");
                 if (isset($phar["plugin.yml"])) {
                     $yaml = yaml_parse($phar["plugin.yml"]->getContent());
-                    if (isset($yaml["version"]) && $yaml["version"] !== $data["tag_name"] && !VersionInfo::isBeta()) {
-                        CloudLogger::get()->warn("§cYour version of the §bCloudBridge §cis outdated!");
-                        if (MainConfig::getInstance()->executeUpdates) {
-                            CloudLogger::get()->warn("§bDownloading §rthe newest version...");
-                            $downloadNewest = true;
-                        } else {
-                            CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/HydraCloudService/CloudBridge/releases/latest§8'§c!");
+                    if (isset($yaml["version"])) {
+                        if ($yaml["version"] !== $data["tag_name"] && !VersionInfo::isBeta()) {
+                            CloudLogger::get()->warn("§cYour version of the §bCloudBridge §cis outdated!");
+                            if (MainConfig::getInstance()->isExecuteUpdates()) {
+                                CloudLogger::get()->warn("§bDownloading §rthe newest version...");
+                                $downloadNewest = true;
+                            } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/HydraCloudService/CloudBridge/releases/latest§8'§c!");
                         }
                     }
                 }
@@ -165,13 +155,15 @@ final class UpdateChecker {
             $data = json_decode($result, true, flags: JSON_THROW_ON_ERROR);
             if (is_array($data) && isset($data["assets"]) && is_array($data["assets"])) {
                 foreach ($data["assets"] as $asset) {
-                    if (isset($asset["name"], $asset["size"]) && $asset["name"] === "CloudBridge.jar" && ($size = filesize(PROXY_PLUGINS_PATH . "CloudBridge.jar")) > 0 && $asset["size"] !== $size) {
-                        CloudLogger::get()->warn("§cYour version of the §bCloudBridge-Proxy §cis outdated!");
-                        if (MainConfig::getInstance()->executeUpdates) {
-                            CloudLogger::get()->warn("§bDownloading §rthe newest version...");
-                            $downloadNewest = true;
-                        } else {
-                            CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/HydraCloudService/CloudBridge-Proxy/releases/latest§8'§c!");
+                    if (isset($asset["name"]) && isset($asset["size"])) {
+                        if ($asset["name"] == "CloudBridge.jar" && ($size = filesize(PROXY_PLUGINS_PATH . "CloudBridge.jar")) > 0) {
+                            if ($asset["size"] !== $size) {
+                                CloudLogger::get()->warn("§cYour version of the §bCloudBridge-Proxy §cis outdated!");
+                                if (MainConfig::getInstance()->isExecuteUpdates()) {
+                                    CloudLogger::get()->warn("§bDownloading §rthe newest version...");
+                                    $downloadNewest = true;
+                                } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/HydraCloudService/CloudBridge-Proxy/releases/latest§8'§c!");
+                            }
                         }
                     }
                 }
@@ -203,18 +195,14 @@ final class UpdateChecker {
             $data = json_decode($result, true, flags: JSON_THROW_ON_ERROR);
             $currentGitCommit = $data["git_commit"];
             $pharGitCommit = str_repeat("00", 20);
-            if (isset(($phar = new Phar(SOFTWARE_PATH . "PocketMine-MP.phar"))->getMetadata()["git"])) {
-                $pharGitCommit = $phar->getMetadata()["git"];
-            }
+            if (isset(($phar = new Phar(SOFTWARE_PATH . "PocketMine-MP.phar"))->getMetadata()["git"])) $pharGitCommit = $phar->getMetadata()["git"];
 
             if ($currentGitCommit !== $pharGitCommit) {
                 CloudLogger::get()->warn("§cYour version of §bPocketMine-MP §cis outdated!");
-                if (MainConfig::getInstance()->executeUpdates) {
+                if (MainConfig::getInstance()->isExecuteUpdates()) {
                     CloudLogger::get()->warn("§bDownloading §rthe newest version...");
                     $downloadNewest = true;
-                } else {
-                    CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/pmmp/PocketMine-MP/releases/latest§8'§c!");
-                }
+                } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/pmmp/PocketMine-MP/releases/latest§8'§c!");
             }
 
             if ($downloadNewest) {
@@ -229,18 +217,16 @@ final class UpdateChecker {
         try {
             $software = SoftwareManager::getInstance()->get("WaterdogPE");
             $downloadNewest = false;
-            $size = NetUtils::fileSize($software?->getUrl());
-            if ($size !== $software?->getFileSize()) {
+            $size = NetUtils::fileSize($software->getUrl());
+            if ($size !== $software->getFileSize()) {
                 CloudLogger::get()->warn("§cYour version of §bWaterdogPE §cis outdated!");
-                if (MainConfig::getInstance()->executeUpdates) {
+                if (MainConfig::getInstance()->isExecuteUpdates()) {
                     CloudLogger::get()->warn("§bDownloading §rthe newest version...");
                     $downloadNewest = true;
-                } else {
-                    CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/WaterdogPE/WaterdogPE/releases/latest§8'§c!");
-                }
+                } else CloudLogger::get()->warn("§cPlease install the newest version from §8'§bhttps://github.com/WaterdogPE/WaterdogPE/releases/latest§8'§c!");
             }
 
-            if ($downloadNewest && $software !== null) {
+            if ($downloadNewest) {
                 SoftwareManager::getInstance()->removeAndDownload($software);
             }
         } catch (Exception $e) {
@@ -262,6 +248,14 @@ final class UpdateChecker {
 
     public function getCurrentVersion(): string {
         return VersionInfo::VERSION;
+    }
+
+    public function setData(array $data): void {
+        $this->data = $data;
+    }
+
+    public function getData(): array {
+        return $this->data;
     }
 
     public static function getInstance(): self {

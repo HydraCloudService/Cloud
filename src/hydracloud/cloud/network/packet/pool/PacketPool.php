@@ -48,11 +48,7 @@ final class PacketPool {
     use SingletonTrait;
 
     /** @var array<CloudPacket> */
-    private array $packets = [] {
-        get {
-            return $this->packets;
-        }
-    }
+    private array $packets = [];
 
     public static function init(): void {
         self::setInstance(new self());
@@ -102,20 +98,18 @@ final class PacketPool {
     }
 
     public function registerPacket(string $packetClass): void {
-        if (!is_subclass_of($packetClass, CloudPacket::class)) {
-            return;
-        }
-
+        if (!is_subclass_of($packetClass, CloudPacket::class)) return;
         CloudLogger::get()->debug("Registering packet " . Utils::cleanPath($packetClass, true) . " (" . $packetClass . ")");
-
-        $packets = $this->packets;
-        $packets[Utils::cleanPath($packetClass, true)] = $packetClass;
-        $this->packets = $packets;
+        $this->packets[Utils::cleanPath($packetClass, true)] = $packetClass;
     }
 
     public function getPacketById(string $pid): ?CloudPacket {
         $get = $this->packets[$pid] ?? null;
-        return ($get === null ? null : new $get());
+        return ($get == null ? null : new $get());
+    }
+
+    public function getPackets(): array {
+        return $this->packets;
     }
 
     public static function getInstance(): self {

@@ -12,7 +12,6 @@ use hydracloud\cloud\http\endpoint\impl\web\WebAccountListEndPoint;
 use hydracloud\cloud\http\endpoint\impl\web\WebAccountRemoveEndPoint;
 use hydracloud\cloud\http\endpoint\impl\web\WebAccountUpdateEndPoint;
 use hydracloud\cloud\util\SingletonTrait;
-use JsonException;
 
 final class WebAccountManager {
     use SingletonTrait;
@@ -26,61 +25,41 @@ final class WebAccountManager {
         $this->accountsConfig = new Config(WEB_PATH . "accounts.json", ConfigTypes::JSON());
     }
 
-    /**
-     * @throws JsonException
-     */
     public function load(): void {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return;
-        }
-
+        if (!MainConfig::getInstance()->isWebEnabled()) return;
         foreach ($this->accountsConfig->getAll() as $data) {
             if (($account = WebAccount::fromArray($data)) !== null) {
                 $this->accounts[$account->getName()] = $account;
             }
         }
 
-        foreach ([new WebAccountCreateEndPoint(), new WebAccountRemoveEndPoint(), new WebAccountGetEndPoint(), new WebAccountUpdateEndPoint(), new WebAccountListEndPoint()] as $endPoint) {
-            EndpointRegistry::addEndPoint($endPoint);
-        }
+        foreach ([new WebAccountCreateEndPoint(), new WebAccountRemoveEndPoint(), new WebAccountGetEndPoint(), new WebAccountUpdateEndPoint(), new WebAccountListEndPoint()] as $endPoint) EndpointRegistry::addEndPoint($endPoint);
     }
 
     public function create(WebAccount $account): void {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return;
-        }
-
+        if (!MainConfig::getInstance()->isWebEnabled()) return;
         $this->accounts[$account->getName()] = $account;
         $this->accountsConfig->set($account->getName(), $account->toArray());
         $this->accountsConfig->save();
     }
 
     public function update(WebAccount $account, ?string $password, ?WebAccountRoles $role): void {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return;
-        }
-
+        if (!MainConfig::getInstance()->isWebEnabled()) return;
         if ($password !== null) {
-            $account->password = $password;
-            $account->initialPassword = false;
+            $account->setPassword($password);
+            $account->setInitialPassword(false);
         }
 
-        if ($role !== null) {
-            $account->role = $role;
-        }
+        if ($role !== null) $account->setRole($role);
 
         $this->accountsConfig->set($account->getName(), $account->toArray());
         $this->accountsConfig->save();
     }
 
     public function remove(WebAccount $account): void {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return;
-        }
+        if (!MainConfig::getInstance()->isWebEnabled()) return;
 
-        if ($this->check($account->getName())) {
-            unset($this->accounts[$account->getName()]);
-        }
+        if ($this->check($account->getName())) unset($this->accounts[$account->getName()]);
 
         $this->accountsConfig->remove($account->getName());
         $this->accountsConfig->save();
@@ -91,18 +70,12 @@ final class WebAccountManager {
     }
 
     public function get(string $name): ?WebAccount {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return null;
-        }
-
+        if (!MainConfig::getInstance()->isWebEnabled()) return null;
         return $this->accounts[$name] ?? null;
     }
 
     public function getAll(): array {
-        if (!MainConfig::getInstance()->isWebEnabled()) {
-            return [];
-        }
-
+        if (!MainConfig::getInstance()->isWebEnabled()) return [];
         return $this->accounts;
     }
 }

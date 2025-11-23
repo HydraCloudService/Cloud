@@ -32,14 +32,14 @@ final readonly class Template {
     public function toArray(): array {
         return [
             "name" => $this->name,
-            "lobby" => $this->templateSettings,
-            "maintenance" => $this->templateSettings,
-            "static" => $this->templateSettings,
-            "maxPlayerCount" => $this->templateSettings,
-            "minServerCount" => $this->templateSettings,
-            "maxServerCount" => $this->templateSettings,
-            "startNewPercentage" => $this->templateSettings,
-            "autoStart" => $this->templateSettings,
+            "lobby" => $this->templateSettings->isLobby(),
+            "maintenance" => $this->templateSettings->isMaintenance(),
+            "static" => $this->templateSettings->isStatic(),
+            "maxPlayerCount" => $this->templateSettings->getMaxPlayerCount(),
+            "minServerCount" => $this->templateSettings->getMinServerCount(),
+            "maxServerCount" => $this->templateSettings->getMaxServerCount(),
+            "startNewPercentage" => $this->templateSettings->getStartNewPercentage(),
+            "autoStart" => $this->templateSettings->isAutoStart(),
             "templateType" => $this->templateType->getName()
         ];
     }
@@ -47,11 +47,7 @@ final readonly class Template {
     public function toDetailedArray(): array {
         $playerCount = 0;
         $serverCount = count(CloudServerManager::getInstance()->getAll($this));
-
-        foreach (CloudServerManager::getInstance()->getAll($this) as $server) {
-            $playerCount += $server->getCloudPlayerCount();
-        }
-
+        foreach (CloudServerManager::getInstance()->getAll($this) as $server) $playerCount += $server->getCloudPlayerCount();
         return array_merge($this->toArray(), [
             "playerCount" => $playerCount,
             "serverCount" => $serverCount
@@ -63,10 +59,7 @@ final readonly class Template {
     }
 
     public static function fromArray(array $data): ?self {
-        if (!Utils::containKeys($data, ...TemplateHelper::NECESSARY_KEYS)) {
-            return null;
-        }
-
+        if (!Utils::containKeys($data, ...TemplateHelper::NECESSARY_KEYS)) return null;
         TemplateHelper::addUnnecessaryKeys($data);
         return self::create($data["name"], TemplateHelper::sumSettingsToInstance($data), TemplateType::get($data["templateType"]) ?? TemplateType::SERVER());
     }

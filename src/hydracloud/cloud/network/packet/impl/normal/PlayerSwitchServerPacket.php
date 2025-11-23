@@ -14,16 +14,8 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 final class PlayerSwitchServerPacket extends CloudPacket {
 
     public function __construct(
-        private string $playerName = "" {
-            get {
-                return $this->playerName;
-            }
-        },
-        private string $newServer = "" {
-            get {
-                return $this->newServer;
-            }
-        }
+        private string $playerName = "",
+        private string $newServer = ""
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -36,12 +28,22 @@ final class PlayerSwitchServerPacket extends CloudPacket {
         $this->newServer = $packetData->readString();
     }
 
+    public function getPlayerName(): string {
+        return $this->playerName;
+    }
+
+    public function getNewServer(): string {
+        return $this->newServer;
+    }
+
     public function handle(ServerClient $client): void {
-        if ((($player = CloudPlayerManager::getInstance()->get($this->playerName)) !== null) && ($server = CloudServerManager::getInstance()->get($this->newServer)) !== null) {
-            Network::getInstance()?->broadcastPacket($this);
-            CloudLogger::get()->info("Player %s performed a server switch (%s -> %s)", $player->getName(), ($player->getCurrentServer()?->getName() ?? "NULL"), ($server?->getName() ?? "NULL"));
-            new PlayerSwitchServerEvent($player, $player->getCurrentServer(), $server)->call();
-            $player->setCurrentServer($server);
+        if (($player = CloudPlayerManager::getInstance()->get($this->playerName)) !== null) {
+            if (($server = CloudServerManager::getInstance()->get($this->newServer)) !== null) {
+                Network::getInstance()->broadcastPacket($this);
+                CloudLogger::get()->info("Player %s performed a server switch (%s -> %s)", $player->getName(), ($player->getCurrentServer()?->getName() ?? "NULL"), ($server?->getName() ?? "NULL"));
+                (new PlayerSwitchServerEvent($player, $player->getCurrentServer(), $server))->call();
+                $player->setCurrentServer($server);
+            }
         }
     }
 

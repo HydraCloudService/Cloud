@@ -31,6 +31,7 @@ final class CloudServerExecuteEndPoint extends EndPoint {
     }
 
     public function isBadRequest(Request $request): bool {
-        return !($request->data()->queries()->has("server") && $request->data()->queries()->has("command"));
+        if ($request->data()->queries()->has("server") && $request->data()->queries()->has("command")) return false;
+        return true;
     }
 }

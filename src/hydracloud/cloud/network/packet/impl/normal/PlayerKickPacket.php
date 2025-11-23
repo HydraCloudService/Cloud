@@ -10,16 +10,8 @@ use hydracloud\cloud\player\CloudPlayerManager;
 final class PlayerKickPacket extends CloudPacket {
 
     public function __construct(
-        private string $playerName = "" {
-            get {
-                return $this->playerName;
-            }
-        },
-        private string $reason = "" {
-            get {
-                return $this->reason;
-            }
-        }
+        private string $playerName = "",
+        private string $reason = ""
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -32,10 +24,16 @@ final class PlayerKickPacket extends CloudPacket {
         $this->reason = $packetData->readString();
     }
 
+    public function getPlayerName(): string {
+        return $this->playerName;
+    }
+
+    public function getReason(): string {
+        return $this->reason;
+    }
+
     public function handle(ServerClient $client): void {
-        if (($player = CloudPlayerManager::getInstance()->get($this->playerName)) !== null) {
-            $player->kick($this->reason);
-        }
+        if (($player = CloudPlayerManager::getInstance()->get($this->playerName)) !== null) $player->kick($this->reason);
     }
 
     public static function create(string $player, string $reason): self {

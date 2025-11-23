@@ -35,37 +35,26 @@ final class MaintenanceCommand extends Command {
 
         switch ($action) {
             case "add": {
-                if ($player === null) {
-                    return false;
-                }
+                if ($player === null) return false;
                 if (!MaintenanceList::is($player)) {
                     $sender->success("Successfully §aadded §rthe player to the maintenance list!");
                     CloudProvider::current()->addToWhitelist($player);
-                } else {
-                    $sender->warn("The player is already on the maintenance list!");
-                }
+                } else $sender->warn("The player is already on the maintenance list!");
                 break;
             }
             case "remove": {
-                if ($player === null) {
-                    return false;
-                }
+                if ($player === null) return false;
                 if (MaintenanceList::is($player)) {
                     $sender->success("Successfully §cremoved §rthe player from the maintenance list!");
                     CloudProvider::current()->removeFromWhitelist($player);
-                } else {
-                    $sender->warn("The player is not on the maintenance list!");
-                }
+                } else $sender->warn("The player is not on the maintenance list!");
                 break;
             }
             case "list": {
                 $list = MaintenanceList::getAll();
                 $sender->info("Players: §8(§b" . count($list) . "§8)");
-                if (empty($list)) {
-                    $sender->info("§cNo players on the maintenance list");
-                } else {
-                    $sender->info("§b" . implode("§8, §b", $list));
-                }
+                if (empty($list)) $sender->info("§cNo players on the maintenance list");
+                else $sender->info("§b" . implode("§8, §b", $list));
                 break;
             }
             default: {

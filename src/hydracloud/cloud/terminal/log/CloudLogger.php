@@ -13,16 +13,13 @@ final class CloudLogger {
     }
 
     public static function get(): Logger {
-        if (self::$logger === null) {
-            self::set(new Logger(LOG_PATH));
-        }
-
+        if (self::$logger === null) self::set(new Logger(LOG_PATH));
         return self::$logger;
     }
 
     public static function temp(bool $saveLogs): Logger {
         $logger = new Logger(LOG_PATH);
-        $logger->saveLogs = $saveLogs;
+        $logger->setSaveLogs($saveLogs);
         return $logger;
     }
 

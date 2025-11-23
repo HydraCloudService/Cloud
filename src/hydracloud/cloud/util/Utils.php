@@ -8,7 +8,6 @@ use hydracloud\cloud\server\CloudServerManager;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\thread\ThreadManager;
 use hydracloud\cloud\util\net\NetUtils;
-use Random\RandomException;
 use Throwable;
 
 final class Utils {
@@ -16,24 +15,13 @@ final class Utils {
     private static mixed $lockFileHandle = null;
 
     public static function checkRunning(?int &$pid = null): bool {
-        if (!file_exists(STORAGE_PATH)) {
-            return false;
-        }
-
+        if (!file_exists(STORAGE_PATH)) return false;
         $file = fopen(STORAGE_PATH . "cloud.lock", "a+b");
-
-        if ($file === false) {
-            return false;
-        }
-
+        if ($file === false) return false;
         if (!flock($file, LOCK_EX | LOCK_NB)) {
             flock($file, LOCK_SH);
             $processId = stream_get_contents($file);
-
-            if (preg_match('/^\d+$/', $processId) === 1) {
-                $pid = $processId;
-            }
-
+            if (preg_match('/^\d+$/', $processId) === 1) $pid = $processId;
             return true;
         }
 
@@ -42,15 +30,8 @@ final class Utils {
 
     public static function createLockFile(): void {
         $file = fopen(STORAGE_PATH . "cloud.lock", "a+b");
-
-        if ($file === false) {
-            return;
-        }
-
-        if (!flock($file, LOCK_EX | LOCK_NB)) {
-            flock($file, LOCK_SH);
-        }
-
+        if ($file === false) return;
+        if (!flock($file, LOCK_EX | LOCK_NB)) flock($file, LOCK_SH);
         ftruncate($file, 0);
         fwrite($file, (string) getmypid());
         fflush($file);
@@ -60,10 +41,7 @@ final class Utils {
 
     public static function deleteLockFile(): void {
         try {
-            if (self::$lockFileHandle === null) {
-                return;
-            }
-
+            if (self::$lockFileHandle === null) return;
             flock(self::$lockFileHandle, LOCK_UN);
             fclose(self::$lockFileHandle);
             unlink(STORAGE_PATH . "cloud.lock");
@@ -74,13 +52,8 @@ final class Utils {
         $downloadServerPlugin = false;
         $downloadProxyPlugin = false;
 
-        if (!file_exists(SERVER_PLUGINS_PATH . "CloudBridge.phar")) {
-            $downloadServerPlugin = true;
-        }
-
-        if (!file_exists(PROXY_PLUGINS_PATH . "CloudBridge.jar")) {
-            $downloadProxyPlugin = true;
-        }
+        if (!file_exists(SERVER_PLUGINS_PATH . "CloudBridge.phar")) $downloadServerPlugin = true;
+        if (!file_exists(PROXY_PLUGINS_PATH . "CloudBridge.jar")) $downloadProxyPlugin = true;
 
         $temporaryLogger = CloudLogger::temp(false);
         $serverPluginsPath = SERVER_PLUGINS_PATH;
@@ -100,35 +73,31 @@ final class Utils {
     }
 
     public static function containKeys(array $array, ...$keys): bool {
-        return array_all($keys, static fn($key) => isset($array[$key]));
+        foreach ($keys as $key) {
+            if (!isset($array[$key])) return false;
+        }
+
+        return true;
     }
 
     public static function cleanPath(string $path, bool $removePath = false): string {
-        if ($removePath) {
-            return ($explode = explode(DIRECTORY_SEPARATOR, str_replace(["\\", "//", "/"], DIRECTORY_SEPARATOR, $path)))[count($explode) - 1];
-        }
-
+        if ($removePath) return ($explode = explode(DIRECTORY_SEPARATOR, str_replace(["\\", "//", "/"], DIRECTORY_SEPARATOR, $path)))[count($explode) - 1];
         return str_replace(CLOUD_PATH, rtrim(str_replace("hydracloud", "hcsrc", basename(CLOUD_PATH)), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $path);
     }
 
     public static function readCloudPerformanceStatus(): array {
         $threadCount = count($threads = ThreadManager::getInstance()->getAll());
-        $memoryLimit = MainConfig::getInstance()->memoryLimit;
+        $memoryLimit = MainConfig::getInstance()->getMemoryLimit();
         [$mainMemory, $mainMemoryPeak] = [memory_get_usage(), memory_get_peak_usage()];
         [$mainMemorySys, $mainMemorySysPeak] = [memory_get_usage(true), memory_get_peak_usage(true)];
         [$serverCount, $playerCount] = [count(CloudServerManager::getInstance()->getAll()), count(CloudPlayerManager::getInstance()->getAll())];
         return [$threadCount, $threads, $mainMemory, $mainMemoryPeak, $mainMemorySys, $mainMemorySysPeak, $memoryLimit, $serverCount, $playerCount];
     }
 
-    /**
-     * @throws RandomException
-     */
     public static function generateString(int $length = 5): string {
         $characters = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         $string = "";
-        for ($i = 0; $i < $length; $i++) {
-            $string .= $characters[random_int(0, (strlen($characters) - 1))];
-        }
+        for ($i = 0; $i < $length; $i++) $string .= $characters[mt_rand(0, (strlen($characters) - 1))];
         return $string;
     }
 }

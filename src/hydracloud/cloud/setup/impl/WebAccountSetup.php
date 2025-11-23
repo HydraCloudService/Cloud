@@ -14,7 +14,7 @@ use hydracloud\cloud\web\WebAccountRoles;
 final class WebAccountSetup extends Setup {
 
     public function onStart(Logger $logger): void {
-        $this->prefix = "§cWebAccount-Setup";
+        $this->setPrefix("§cWebAccount-Setup");
         $logger->info("Welcome to the §cWebAccount§r-Setup!");
     }
 
@@ -29,10 +29,7 @@ final class WebAccountSetup extends Setup {
                 ->question("What is the name of your web account?")
                 ->canSkipped(false)
                 ->parser(function(string $input): ?string {
-                    if (WebAccountManager::getInstance()->check($input)) {
-                        return null;
-                    }
-
+                    if (WebAccountManager::getInstance()->check($input)) return null;
                     return $input;
                 })
                 ->build(),
@@ -44,10 +41,7 @@ final class WebAccountSetup extends Setup {
                 ->default("default")
                 ->canSkipped(true)
                 ->parser(function(string $input): ?WebAccountRoles {
-                    if (($role = WebAccountRoles::get(strtolower($input))) === null) {
-                        return null;
-                    }
-
+                    if (($role = WebAccountRoles::get(strtolower($input))) === null) return null;
                     return $role;
                 })
                 ->build()

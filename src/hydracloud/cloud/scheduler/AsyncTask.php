@@ -11,27 +11,16 @@ abstract class AsyncTask extends Runnable {
 
     private mixed $result = null;
     private bool $done = false;
-    private bool $crashed = false {
-        get {
-            return $this->crashed;
-        }
-    }
+    private bool $crashed = false;
     private bool $serialized = false;
-    public bool $submitted = false {
-        get {
-            return $this->submitted;
-        }
-        set {
-            $this->submitted = $value;
-        }
-    }
+    private bool $submitted = false;
 
     public function run(): void {
         try {
             $this->onRun();
         } catch (Throwable $exception) {
             $this->crashed = true;
-            CloudLogger::get()->error("§cAsynchronous task §8'§e" . new ReflectionClass($this)->getShortName() . "§8' §ccrashed!");
+            CloudLogger::get()->error("§cAsynchronous task §8'§e" . (new ReflectionClass($this))->getShortName() . "§8' §ccrashed!");
             CloudLogger::get()->exception($exception);
         }
 
@@ -42,15 +31,16 @@ abstract class AsyncTask extends Runnable {
 
     public function onCompletion(): void {}
 
+    public function setSubmitted(bool $submitted): void {
+        $this->submitted = $submitted;
+    }
+
     public function setResult(mixed $result): void {
         $this->result = ($this->serialized = !is_scalar($result)) ? igbinary_serialize($result) : $result;
     }
 
     public function getResult(): mixed {
-        if ($this->serialized) {
-            return igbinary_unserialize($this->result);
-        }
-
+        if ($this->serialized) return igbinary_unserialize($this->result);
         return $this->result;
     }
 
@@ -60,5 +50,13 @@ abstract class AsyncTask extends Runnable {
 
     public function isDone(): bool {
         return $this->done || $this->crashed;
+    }
+
+    public function isCrashed(): bool {
+        return $this->crashed;
+    }
+
+    public function isSubmitted(): bool {
+        return $this->submitted;
     }
 }

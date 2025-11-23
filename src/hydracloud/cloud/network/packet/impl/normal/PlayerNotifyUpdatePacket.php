@@ -10,16 +10,8 @@ use hydracloud\cloud\provider\CloudProvider;
 final class PlayerNotifyUpdatePacket extends CloudPacket {
 
     public function __construct(
-        private string $playerName = "" {
-            get {
-                return $this->playerName;
-            }
-        },
-        private bool $value = false {
-            get {
-                return $this->value;
-            }
-        }
+        private string $playerName = "",
+        private bool $value = false
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
@@ -32,12 +24,17 @@ final class PlayerNotifyUpdatePacket extends CloudPacket {
         $this->value = $packetData->readBool();
     }
 
+    public function getPlayerName(): string {
+        return $this->playerName;
+    }
+
+    public function getValue(): bool {
+        return $this->value;
+    }
+
     public function handle(ServerClient $client): void {
-        if ($this->value) {
-            CloudProvider::current()->enablePlayerNotifications($this->playerName);
-        } else {
-            CloudProvider::current()->disablePlayerNotifications($this->playerName);
-        }
+        if ($this->value) CloudProvider::current()->enablePlayerNotifications($this->playerName);
+        else CloudProvider::current()->disablePlayerNotifications($this->playerName);
     }
 
     public static function create(string $player, bool $v): self {

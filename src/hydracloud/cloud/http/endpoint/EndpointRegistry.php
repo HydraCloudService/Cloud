@@ -34,16 +34,12 @@ use hydracloud\cloud\http\io\Request;
 use hydracloud\cloud\http\io\Response;
 use hydracloud\cloud\http\util\Router;
 use hydracloud\cloud\terminal\log\CloudLogger;
-use JsonException;
 
 final class EndpointRegistry {
 
     /** @var array<EndPoint> */
     private static array $endPoints = [];
 
-    /**
-     * @throws JsonException
-     */
     public static function registerDefaults(): void {
         $endPoints = [
             new CloudInfoEndPoint(),
@@ -60,14 +56,10 @@ final class EndpointRegistry {
         }
     }
 
-    /**
-     * @throws JsonException
-     */
     public static function addEndPoint(EndPoint $endPoint): void {
         if (in_array(strtoupper($endPoint->getRequestMethod()), Request::SUPPORTED_REQUEST_METHODS)) {
             self::$endPoints[$endPoint->getPath()] = $endPoint;
-            Router::getInstance()->{strtolower($endPoint->getRequestMethod())}(
-                $endPoint->getPath(), function (Request $request, Response $response) use ($endPoint): void {
+            Router::getInstance()->{strtolower($endPoint->getRequestMethod())}($endPoint->getPath(), function (Request $request, Response $response) use ($endPoint): void {
                 $response->contentType("application/json");
                 if (!$request->authorized()) {
                     $response->code(401);
@@ -86,9 +78,7 @@ final class EndpointRegistry {
     }
 
     public static function removeEndPoint(EndPoint $endPoint): void {
-        if (isset(self::$endPoints[$endPoint->getPath()])) {
-            unset(self::$endPoints[$endPoint->getPath()]);
-        }
+        if (isset(self::$endPoints[$endPoint->getPath()])) unset(self::$endPoints[$endPoint->getPath()]);
     }
 
     public static function getEndPoint(string $path): ?EndPoint {

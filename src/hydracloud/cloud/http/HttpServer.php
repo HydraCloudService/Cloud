@@ -23,7 +23,7 @@ use Throwable;
 
 final class HttpServer extends Thread {
 
-    public const int REQUEST_READ_LENGTH = 8192;
+    public const REQUEST_READ_LENGTH = 8192;
 
     private bool $connected = false;
 
@@ -39,7 +39,7 @@ final class HttpServer extends Thread {
     public function onRun(): void {
         while ($this->connected) {
             if ($c = $this->accept()) {
-                // thanks, JS `fetch` and shoutout to my bro ChatGPT for fixing this shit
+                // thanks JS `fetch` and shoutout to my bro ChatGPT for fixing this shit
                 $request = "";
                 $contentLength = 0;
                 $body = "";
@@ -86,21 +86,16 @@ final class HttpServer extends Thread {
             return new Response(500);
         }
 
-        if (Router::getInstance()->isRegistered($request)) {
-            return Router::getInstance()->execute($request);
-        }
-
+        if (Router::getInstance()->isRegistered($request)) return Router::getInstance()->execute($request);
         CloudLogger::get()->debug("No route found for " . $request->data()->method() . " HTTP request from " . $request->data()->address() . ", sending 404 response...");
         $response = new Response(404);
-        if ($this->invalidUrlHandler !== null) {
-            ($this->invalidUrlHandler)($request, $response);
-        }
+        if ($this->invalidUrlHandler !== null) ($this->invalidUrlHandler)($request, $response);
         return $response;
     }
 
     public function init(): void {
         if (MainConfig::getInstance()->isHttpServerEnabled()) {
-            new HttpServerInitializeEvent()->call();
+            (new HttpServerInitializeEvent())->call();
 
             EndpointRegistry::registerDefaults();
 
@@ -115,30 +110,22 @@ final class HttpServer extends Thread {
                 CloudLogger::get()->error("§cFailed to bind the HTTP server to §e" . $this->address . "§8: §e" . $exception->getMessage());
             }
 
-            $this->entry = HydraCloud::getInstance()->sleeperHandler->addNotifier(function(): void {
+            $this->entry = HydraCloud::getInstance()->getSleeperHandler()->addNotifier(function(): void {
                 /** @var UnhandledHttpRequest $data */
                 while (($data = $this->buffer->shift()) !== null) {
                     $client = $data->getClient();
                     $buf = $data->getBuffer();
 
-                    CloudLogger::get()->debug("Received incoming HTTP request from " . $client->address . "...");
+                    CloudLogger::get()->debug("Received incoming HTTP request from " . $client->getAddress() . "...");
 
                     try {
                         $write = true;
-
-                        if (MainConfig::getInstance()->isHttpServerOnlyLocal() && !$client->address->isLocal()) {
-                            $write = false;
-                        }
-
-                        CloudLogger::get()->debug(!$write ? "Can't handle HTTP request from " . $client->address . "..." : "Handling HTTP request from " . $client->address . "...");
-
-                        if ($write) {
-                            $client->write($this->handleRequest($client->address, $buf));
-                        }
-
+                        if (MainConfig::getInstance()->isHttpServerOnlyLocal() && !$client->getAddress()->isLocal()) $write = false;
+                        CloudLogger::get()->debug(!$write ? "Can't handle HTTP request from " . $client->getAddress() . "..." : "Handling HTTP request from " . $client->getAddress() . "...");
+                        if ($write) $client->write($this->handleRequest($client->getAddress(), $buf));
                         $client->close();
                     } catch (Throwable $exception) {
-                        CloudLogger::get()->warn("Received an invalid request from §b" . $client->address . "§r, ignoring...");
+                        CloudLogger::get()->warn("Received an invalid request from §b" . $client->getAddress() . "§r, ignoring...");
                         CloudLogger::get()->debug($buf);
                         CloudLogger::get()->exception($exception);
                     }
@@ -152,28 +139,19 @@ final class HttpServer extends Thread {
     public function bind(): bool {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
-        if (!socket_bind($this->socket, $this->address->getAddress(), $this->address->getPort())) {
-            return false;
-        }
+        if (!socket_bind($this->socket, $this->address->getAddress(), $this->address->getPort())) return false;
         $this->connected = true;
         return socket_listen($this->socket);
     }
 
     public function accept(): ?SocketClient {
-        if (!$this->connected) {
-            return null;
-        }
-
-        if (($c = @socket_accept($this->socket)) !== false && $c instanceof Socket) {
-            return SocketClient::fromSocket($c);
-        }
+        if (!$this->connected) return null;
+        if (($c = @socket_accept($this->socket)) !== false && $c instanceof Socket) return SocketClient::fromSocket($c);
         return null;
     }
 
     public function close(): void {
-        if (!$this->connected) {
-            return;
-        }
+        if (!$this->connected) return;
         $this->connected = false;
         @socket_shutdown($this->socket);
         @socket_close($this->socket);

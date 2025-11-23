@@ -20,16 +20,13 @@ final class Terminal extends Thread {
     public function __construct() {
         $this->buffer = new ThreadSafeArray();
 
-        $this->entry = HydraCloud::getInstance()->sleeperHandler->addNotifier(function (): void {
+        $this->entry = HydraCloud::getInstance()->getSleeperHandler()->addNotifier(function (): void {
             while (($line = $this->buffer->shift()) !== null) {
                 try {
                     if (($setup = Setup::getCurrentSetup()) !== null) {
                         $setup->handleInput($line);
                     } else {
-                        if (trim($line) === "") {
-                            return;
-                        }
-
+                        if (trim($line) == "") return;
                         if (!CommandManager::getInstance()->handleInput(new ConsoleCommandSender(), $line)) {
                             CloudLogger::get()->error("This §bcommand §rdoesn't exists!");
                         }
@@ -42,7 +39,7 @@ final class Terminal extends Thread {
     }
 
     public function onRun(): void {
-        $input = fopen("php://stdin", 'rb');
+        $input = fopen("php://stdin", "r");
         while ($this->isRunning()) {
             $this->buffer[] = trim(fgets($input));
             $this->entry->createNotifier()->wakeupSleeper();

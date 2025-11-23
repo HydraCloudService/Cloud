@@ -21,13 +21,11 @@ final class CloudServerGetEndPoint extends EndPoint {
 
         if (($server = CloudServerManager::getInstance()->get($identifier)) !== null) {
             return $server->toDetailedArray();
+        } else if (($template = TemplateManager::getInstance()->get($identifier)) !== null) {
+            return array_values(array_map(fn(CloudServer $cloudServer) => $cloudServer->toDetailedArray(), CloudServerManager::getInstance()->getAll($template)));
+        } else {
+            return ["error" => "The server doesn't exists!"];
         }
-
-        if (($template = TemplateManager::getInstance()->get($identifier)) !== null) {
-            return array_values(array_map(static fn(CloudServer $cloudServer) => $cloudServer->toDetailedArray(), CloudServerManager::getInstance()->getAll($template)));
-        }
-
-        return ["error" => "The server doesn't exists!"];
     }
 
     public function isBadRequest(Request $request): bool {
