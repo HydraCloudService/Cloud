@@ -12,13 +12,13 @@
   </component>
   <component name="PhpIncludePathManager">
     <include_path>
-      <path value="$PROJECT_DIR$/../../pocketmine/PMMP" />
+      <path value="$PROJECT_DIR$/../../pmmp/source" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">
     <option name="suggestChangeDefaultLanguageLevel" value="false" />
   </component>
-  <component name="PhpRuntimeConfiguration" default_stubs_path="$PROJECT_DIR$/../../pocketmine/phpstorm-stubs-fork" />
+  <component name="PhpRuntimeConfiguration" default_stubs_path="C:\Users\User\Desktop\Programming\pmmp\phpstorm-stubs-fork" />
   <component name="PhpStanOptionsConfiguration">
     <option name="transferred" value="true" />
   </component>
