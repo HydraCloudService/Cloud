@@ -128,12 +128,11 @@ final class HydraCloud {
         CloudLogger::get()->info("The §bCloud §ris §astarting§r...");
         $this->startTime = microtime(true);
 
-        $this->network = new Network(new Address("127.0.0.1", MainConfig::getInstance()->getNetworkPort()));
-        if (MainConfig::getInstance()->isHttpServerOnlyLocal()) {
-            $this->httpServer = new HttpServer(new Address("127.0.0.1", MainConfig::getInstance()->getHttpServerPort()));
-        } else {
-            $this->httpServer = new HttpServer(new Address("0.0.0.0", MainConfig::getInstance()->getHttpServerPort()));
-        }
+        $networkAddress = (MainConfig::getInstance()->isNetworkOnlyLocal() ? "127.0.0.1" : "0.0.0.0");
+        $this->network = new Network(new Address($networkAddress, MainConfig::getInstance()->getNetworkPort()));
+
+        $httpAddress = (MainConfig::getInstance()->isHttpServerOnlyLocal() ? "127.0.0.1" : "0.0.0.0");
+        $this->httpServer = new HttpServer(new Address($httpAddress, MainConfig::getInstance()->getHttpServerPort()));
 
         ServerPreparator::getInstance()->init();
         TemplateManager::getInstance()->load();
