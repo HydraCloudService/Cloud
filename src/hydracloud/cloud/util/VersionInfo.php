@@ -4,9 +4,9 @@ namespace hydracloud\cloud\util;
 
 final class VersionInfo {
 
-    public const VERSION = "2.0.9";
+    public const VERSION = "2.1.0";
     public const DEVELOPERS = ["xxFLORII"];
-    public const BETA = false;
+    public const BETA = true;
 
     public static function getVersion(): int {
         return self::VERSION;
