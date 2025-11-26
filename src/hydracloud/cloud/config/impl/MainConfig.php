@@ -14,7 +14,9 @@ final class MainConfig extends Configuration {
     use SingletonTrait;
 
     /** @ignored */
-    private string $generatedKey;
+    private string $generatedHttpKey;
+    /** @ignored */
+    private string $generatedNetworkKey;
     private int $memoryLimit = 512;
     private string $language = "en_US";
     private string $provider = "json";
@@ -24,6 +26,7 @@ final class MainConfig extends Configuration {
     private string $startMethod = "tmux";
     private array $network = [
         "port" => 3656,
+        "auth-key" => "123",
         "encryption" => true,
         "only-local" => true
     ];
@@ -73,7 +76,8 @@ final class MainConfig extends Configuration {
     public function __construct() {
         parent::__construct(STORAGE_PATH . "config.json", self::TYPE_JSON);
         self::setInstance($this);
-        $this->httpServer["auth-key"] = ($this->generatedKey = Utils::generateString(10));
+        $this->network["auth-key"] = ($this->generatedNetworkKey = Utils::generateString(10));
+        $this->httpServer["auth-key"] = ($this->generatedHttpKey = Utils::generateString(10));
 
         $defaultHttp = $this->httpServer;
         $defaultNetwork = $this->network;
@@ -281,6 +285,10 @@ final class MainConfig extends Configuration {
 
     public function getHttpServerAuthKey(): string {
         return $this->httpServer["auth-key"];
+    }
+
+    public function getNetworkAuthKey(): string {
+        return $this->network["auth-key"];
     }
 
     public function isHttpServerOnlyLocal(): bool {

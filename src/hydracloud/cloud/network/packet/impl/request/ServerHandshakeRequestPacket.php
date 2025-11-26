@@ -2,6 +2,7 @@
 
 namespace hydracloud\cloud\network\packet\impl\request;
 
+use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\network\client\ServerClient;
 use hydracloud\cloud\network\client\ServerClientCache;
 use hydracloud\cloud\network\Network;
@@ -18,24 +19,31 @@ final class ServerHandshakeRequestPacket extends RequestPacket {
 
     public function __construct(
         private ?string $serverName = null,
+        private ?string $authKey = null,
         private ?int $processId = null,
         private ?int $maxPlayers = null
     ) {}
 
     public function encodePayload(PacketData $packetData): void {
         $packetData->write($this->serverName)
+            ->write($this->authKey)
             ->write($this->processId)
             ->write($this->maxPlayers);
     }
 
     public function decodePayload(PacketData $packetData): void {
         $this->serverName = $packetData->readString();
+        $this->authKey = $packetData->readString();
         $this->processId = $packetData->readInt();
         $this->maxPlayers = $packetData->readInt();
     }
 
     public function getServerName(): ?string {
         return $this->serverName;
+    }
+
+    public function getAuthKey(): ?string{
+        return $this->authKey;
     }
 
     public function getProcessId(): ?int {
@@ -48,6 +56,10 @@ final class ServerHandshakeRequestPacket extends RequestPacket {
 
     public function handle(ServerClient $client): void {
         if (($server = CloudServerManager::getInstance()->get($this->serverName)) !== null) {
+            if ($this->authKey == null || $this->authKey != MainConfig::getInstance()->getNetworkAuthKey()) {
+                $this->sendResponse(new ServerHandshakeResponsePacket(VerifyStatus::DENIED()), $client);
+            }
+            
             ServerClientCache::getInstance()->add($server, $client);
             CloudLogger::get()->success("The server §b" . $server->getName() . " §rhas §aconnected §rto the cloud.");
             $server->getCloudServerData()->setMaxPlayers($this->maxPlayers);

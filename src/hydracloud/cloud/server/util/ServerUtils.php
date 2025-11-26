@@ -45,7 +45,8 @@ final class ServerUtils {
             "cloud-port" => "%port%",
             "encryption" => "%encryption%",
             "cloud-language" => "%language%",
-            "cloud-path" => "%cloud_path%"
+            "cloud-path" => "%cloud_path%",
+            "cloud-password" => "%cloud_password%"
         ],
         "PROXY" => [
             "listener" => [
@@ -96,7 +97,8 @@ final class ServerUtils {
             "template" => "%template%",
             "encryption" => "%encryption%",
             "cloud-language" => "%language%",
-            "cloud-path" => "%cloud_path%"
+            "cloud-path" => "%cloud_path%",
+            "cloud-password" => "%cloud_password%"
         ]
     ];
 
@@ -184,7 +186,7 @@ final class ServerUtils {
         $content = file_get_contents($server->getPath() . $fileName);
         if ($content === false) return;
         file_put_contents($server->getPath() . $fileName, str_replace(
-            ["%max_players%", "%server_port%", "%server_portv6%", "%name%", "%template%", "%port%", "%encryption%", "%language%", "%cloud_path%"],
+            ["%max_players%", "%server_port%", "%server_portv6%", "%name%", "%template%", "%port%", "%encryption%", "%language%", "%cloud_path%", "%cloud_password%"],
             [
                 $server->getCloudServerData()->getMaxPlayers(),
                 $server->getCloudServerData()->getPort(),
@@ -194,7 +196,8 @@ final class ServerUtils {
                 MainConfig::getInstance()->getNetworkPort(),
                 ($server->getTemplate()->getTemplateType()->isServer() ? (MainConfig::getInstance()->isNetworkEncryptionEnabled() ? "on" : "off") : (MainConfig::getInstance()->isNetworkEncryptionEnabled() ? "true" : "false")),
                 MainConfig::getInstance()->getLanguage(),
-                CLOUD_PATH
+                CLOUD_PATH,
+                MainConfig::getInstance()->getNetworkAuthKey()
             ],
             $content
         ));
