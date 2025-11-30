@@ -6,7 +6,7 @@ final class VersionInfo {
 
     public const string VERSION = "2.1.2";
     public const array DEVELOPERS = ["xxFLORII"];
-    public const bool BETA = true;
+    public const bool BETA = false;
 
     public static function getVersion(): int {
         return self::VERSION;
