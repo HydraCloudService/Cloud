@@ -58,7 +58,7 @@ class Logger {
             $args = implode(", ", array_map(function(mixed $argument): string {
                 if (is_object($argument)) {
                     try {
-                        return (new ReflectionClass($argument))->getShortName();
+                        return new ReflectionClass($argument)->getShortName();
                     } catch (ReflectionException) {
                         return get_class($argument);
                     }
@@ -86,8 +86,6 @@ class Logger {
         }
 
         $threadName = "Main thread";
-
-        $threadName = "";
         try {
             if (Thread::getCurrentThread() !== null) {
                 if (method_exists(Thread::getCurrentThread(), "getThreadName")) $threadName = Thread::getCurrentThread()->getThreadName();
