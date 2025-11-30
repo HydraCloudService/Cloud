@@ -58,6 +58,8 @@ final class ServerHandshakeRequestPacket extends RequestPacket {
         if (($server = CloudServerManager::getInstance()->get($this->serverName)) !== null) {
             if ($this->authKey == null || $this->authKey != MainConfig::getInstance()->getNetworkAuthKey()) {
                 $this->sendResponse(new ServerHandshakeResponsePacket(VerifyStatus::DENIED()), $client);
+                CloudLogger::get()->warn("The server §b" . $server->getName() . " §rwas §cdenied §rdue to an invalid authentication key.");
+                return;
             }
             
             ServerClientCache::getInstance()->add($server, $client);
