@@ -64,7 +64,7 @@ final class ServerHandshakeRequestPacket extends RequestPacket {
             }
 
             if ($server->getVerifyStatus() === VerifyStatus::VERIFIED()) {
-                CloudLogger::get()->warn("The server §b" . $server->getName() . " §cis already verified§r.");
+                CloudLogger::get()->warn("§cThe server §b" . $server->getName() . " §cis already verified§r.");
                 return;
             }
             
