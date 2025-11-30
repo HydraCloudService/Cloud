@@ -3,6 +3,9 @@
 namespace hydracloud\cloud\http;
 
 use Closure;
+use hydracloud\cloud\traffic\impl\HttpTrafficMonitor;
+use hydracloud\cloud\traffic\TrafficMonitor;
+use hydracloud\cloud\traffic\TrafficMonitorManager;
 use pmmp\thread\ThreadSafeArray;
 use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\event\impl\http\HttpServerInitializeEvent;
@@ -86,16 +89,29 @@ final class HttpServer extends Thread {
             return new Response(500);
         }
 
+        TrafficMonitorManager::getInstance()->callHandlers(
+            TrafficMonitorManager::TRAFFIC_HTTP,
+            HttpTrafficMonitor::HTTP_MODE_REQUEST_IN,
+            $request, $address
+        );
+
         if (Router::getInstance()->isRegistered($request)) return Router::getInstance()->execute($request);
         CloudLogger::get()->debug("No route found for " . $request->data()->method() . " HTTP request from " . $request->data()->address() . ", sending 404 response...");
         $response = new Response(404);
         if ($this->invalidUrlHandler !== null) ($this->invalidUrlHandler)($request, $response);
+
+        TrafficMonitorManager::getInstance()->callHandlers(
+            TrafficMonitorManager::TRAFFIC_HTTP,
+            HttpTrafficMonitor::HTTP_MODE_RESPONSE_OUT,
+            $request, $response, $address
+        );
+
         return $response;
     }
 
     public function init(): void {
         if (MainConfig::getInstance()->isHttpServerEnabled()) {
-            (new HttpServerInitializeEvent())->call();
+            new HttpServerInitializeEvent()->call();
 
             EndpointRegistry::registerDefaults();
 
@@ -117,6 +133,13 @@ final class HttpServer extends Thread {
                     $buf = $data->getBuffer();
 
                     CloudLogger::get()->debug("Received incoming HTTP request from " . $client->getAddress() . "...");
+
+                    TrafficMonitorManager::getInstance()->pushBytes(TrafficMonitorManager::TRAFFIC_HTTP, $bytes = strlen($buf), TrafficMonitor::REGULAR_MODE_IN);
+                    TrafficMonitorManager::getInstance()->callHandlers(
+                        TrafficMonitorManager::TRAFFIC_HTTP,
+                        TrafficMonitor::REGULAR_MODE_IN,
+                        $buf, $bytes, $client->getAddress()
+                    );
 
                     try {
                         $write = true;

@@ -8,14 +8,19 @@ use hydracloud\cloud\terminal\log\CloudLogger;
 final class ShutdownHandler {
 
     public static function register(): void {
-        register_shutdown_function(fn() => self::shutdown());
+        register_shutdown_function(self::crash(...));
 
         if (function_exists("pcntl_signal")) {
-            pcntl_signal(SIGTERM, fn(int $signo) => self::shutdown());
-            pcntl_signal(SIGINT, fn(int $signo) => self::shutdown());
-            pcntl_signal(SIGHUP, fn(int $signo) => self::shutdown());
+            pcntl_signal(SIGTERM, self::shutdown(...));
+            pcntl_signal(SIGINT, self::shutdown(...));
+            pcntl_signal(SIGHUP, self::shutdown(...));
             pcntl_async_signals(true);
         }
+    }
+
+    private static function crash(): void {
+        CloudLogger::get()->emptyLine();
+        HydraCloud::getInstance()->handleCrash();
     }
 
     public static function unregister(): void {

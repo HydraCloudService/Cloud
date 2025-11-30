@@ -2,32 +2,34 @@
 
 namespace hydracloud\cloud\config;
 
+use InvalidArgumentException;
+use JsonException;
 use ReflectionClass;
 
 class Configuration {
 
-    public const KNOWN_TYPES = [
+    public const array KNOWN_TYPES = [
         Configuration::TYPE_YAML, Configuration::TYPE_JSON
     ];
 
-    public const TYPE_YAML = 0;
-    public const TYPE_JSON = 1;
+    public const int TYPE_YAML = 0;
+    public const int TYPE_JSON = 1;
 
-    public function __construct(private string $path, private int $type) {
+    public function __construct(private readonly string $path, private readonly int $type) {
         if (!in_array($this->getType(), self::KNOWN_TYPES)) {
-            throw new \InvalidArgumentException("Unknown configuration type");
+            throw new InvalidArgumentException("Unknown configuration type");
         }
     }
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function load(): bool {
         if (file_exists($this->getPath()) && is_file($this->getPath())) {
             $contents = file_get_contents($this->getPath());
             $contents = ($this->getType() == Configuration::TYPE_YAML ? yaml_parse($contents) : json_decode($contents, true, flags: JSON_THROW_ON_ERROR));
 
-            foreach ((new ReflectionClass($this))->getProperties() as $property) {
+            foreach (new ReflectionClass($this)->getProperties() as $property) {
                 if (!str_contains($property->getDocComment(), "@ignored")) {
                     $property->setAccessible(true);
                     if (array_key_exists($property->getName(), $contents)) {
@@ -41,11 +43,11 @@ class Configuration {
     }
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
     public function save(): bool {
         $contents = [];
-        foreach ((new ReflectionClass($this))->getProperties() as $property) {
+        foreach (new ReflectionClass($this)->getProperties() as $property) {
             if (!str_contains($property->getDocComment(), "@ignored")) {
                 $property->setAccessible(true);
                 $contents[$property->getName()] = $property->getValue($this);

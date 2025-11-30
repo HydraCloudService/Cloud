@@ -7,6 +7,7 @@ use hydracloud\cloud\exception\ExceptionHandler;
 use hydracloud\cloud\HydraCloud;
 use hydracloud\cloud\provider\CloudProvider;
 use hydracloud\cloud\server\util\ServerUtils;
+use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\Utils;
 
@@ -160,7 +161,7 @@ final class MainConfig extends Configuration {
 
     public function setMemoryLimit(int $memoryLimit): void {
         $this->memoryLimit = $memoryLimit;
-        ini_set("memory_limit", ($memoryLimit < 0 ? "-1" : $memoryLimit . "M"));
+        ini_set("memory_limit", ($memoryLimit <= 0 ? "-1" : $memoryLimit . "M"));
     }
 
     public function setLanguage(string $language): void {

@@ -5,7 +5,6 @@ namespace hydracloud\cloud\server;
 use Closure;
 use hydracloud\cloud\event\impl\server\ServerStartEvent;
 use hydracloud\cloud\event\impl\server\ServerStopEvent;
-use hydracloud\cloud\group\ServerGroupManager;
 use hydracloud\cloud\language\Language;
 use hydracloud\cloud\network\client\ServerClientCache;
 use hydracloud\cloud\network\packet\CloudPacket;
@@ -33,7 +32,6 @@ use hydracloud\cloud\template\Template;
 use hydracloud\cloud\template\TemplateManager;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\terminal\log\CloudLogger;
-use hydracloud\cloud\util\FileUtils;
 use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\terminal\TerminalUtils;
 use hydracloud\cloud\util\Utils;
@@ -72,14 +70,14 @@ class CloudServer {
     public function start(): void {
         CloudServerManager::getInstance()->addToProxies($this);
 
-        (new ServerStartEvent($this))->call();
+        new ServerStartEvent($this)->call();
         CloudLogger::get()->info("§aStarting §b" . $this->getName() . "§r...");
         NotifyType::STARTING()->send(["%server%" => $this->getName()]);
         ServerUtils::executeWithStartCommand($this->getPath(), $this->getName(), $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
     }
 
     public function stop(bool $force = false): void {
-        (new ServerStopEvent($this, $force))->call();
+        new ServerStopEvent($this, $force)->call();
         CloudLogger::get()->info("§cStopping §b" . $this->getName() . "§r...");
         NotifyType::STOPPING()->send(["%server%" => $this->getName()]);
         $this->setServerStatus(ServerStatus::STOPPING());
@@ -169,7 +167,7 @@ class CloudServer {
 
     /**
      * @param CloudPacket $packet
-     * @param int $ticks delay in ticks (20 = 1s)
+     * @param int $ticks delay in ticks (20 = 1 s)
      * @param Closure|null $onSend function(ServerClient $client, CloudPacket $packet, bool $success): void {}
      * @return void
      */
@@ -178,8 +176,7 @@ class CloudServer {
     }
 
     public function getCloudPlayer(string $name): ?CloudPlayer {
-        foreach ($this->getCloudPlayers() as $player) if ($player->getName() == $name) return $player;
-        return null;
+        return array_find($this->getCloudPlayers(), fn($player) => $player->getName() == $name);
     }
 
     /** @return array<CloudPlayer> */

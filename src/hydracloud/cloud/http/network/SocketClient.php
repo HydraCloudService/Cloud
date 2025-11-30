@@ -2,6 +2,8 @@
 
 namespace hydracloud\cloud\http\network;
 
+use hydracloud\cloud\traffic\TrafficMonitor;
+use hydracloud\cloud\traffic\TrafficMonitorManager;
 use pmmp\thread\ThreadSafe;
 use hydracloud\cloud\util\net\Address;
 use Socket;
@@ -24,6 +26,7 @@ final class SocketClient extends ThreadSafe {
     }
 
     public function write(string $buffer): bool {
+        TrafficMonitorManager::getInstance()->pushBytes(TrafficMonitorManager::TRAFFIC_HTTP, strlen($buffer), TrafficMonitor::REGULAR_MODE_OUT);
         return (@socket_write($this->socket, $buffer) === strlen($buffer));
     }
 

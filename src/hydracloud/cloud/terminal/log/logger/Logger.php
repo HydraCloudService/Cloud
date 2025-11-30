@@ -2,6 +2,10 @@
 
 namespace hydracloud\cloud\terminal\log\logger;
 
+use DateInvalidTimeZoneException;
+use DateMalformedStringException;
+use DateTime;
+use DateTimeZone;
 use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\setup\Setup;
 use hydracloud\cloud\terminal\log\color\CloudColor;
@@ -12,7 +16,8 @@ use ReflectionClass;
 use ReflectionException;
 use Throwable;
 
-final class Logger {
+class Logger {
+    private string $format = "§8[§b{time_with_ms}§8] §8[§r{thread}§8/§r{log_level}§r§8] §r{message}§r";
 
     private mixed $cloudLogFile;
     private bool $closed = false;
@@ -74,14 +79,30 @@ final class Logger {
     }
 
     public function send(CloudLogLevel $logLevel, string $message, string ...$params): self {
+        try {
+            $time = new DateTime("now", new DateTimeZone(ini_get("date.timezone")));
+        } catch (DateInvalidTimeZoneException | DateMalformedStringException) {
+            $time = new DateTime("now");
+        }
+
+        $threadName = "Main thread";
+
         $threadName = "";
         try {
             if (Thread::getCurrentThread() !== null) {
-                $threadName = "§8[§c" . (new ReflectionClass(Thread::getCurrentThread()))->getShortName() . "§8] ";
+                if (method_exists(Thread::getCurrentThread(), "getThreadName")) $threadName = Thread::getCurrentThread()->getThreadName();
+                else $threadName = new ReflectionClass(Thread::getCurrentThread())->getShortName();
             }
         } catch (ReflectionException) {}
 
-        $format = ($this->usePrefix ? $threadName . "§r" . date("H:i:s") . " §8| §r" . $logLevel->getPrefix() . " §8» §r" : "§r") . (empty($params) ? $message : sprintf($message, ...$params)) . CloudColor::RESET();
+        $parsedMessage = count($params) > 0 ? sprintf($message, ...$params) : $message;
+        $format = $this->usePrefix ?
+            str_replace(
+                ["{thread}", "{time}", "{time_with_ms}", "{log_level}", "{message}"],
+                [$threadName, $time->format("H:i:s"), $time->format("H:i:s.v"), $logLevel->getPrefix(), $parsedMessage],
+                $this->format
+            ) : "§r" . $parsedMessage;
+
         $line = CloudColor::toColoredString($format) . "\n";
 
         if (($setup = Setup::getCurrentSetup()) !== null && $setup->getLogger() === $this) echo $line;
@@ -117,6 +138,14 @@ final class Logger {
             $this->closed = true;
             if ($this->cloudLogFile !== null) fclose($this->cloudLogFile);
         }
+    }
+
+    public function setFormat(string $format): void {
+        $this->format = $format;
+    }
+
+    public function getFormat(): string {
+        return $this->format;
     }
 
     public function isDebugMode(): bool {
