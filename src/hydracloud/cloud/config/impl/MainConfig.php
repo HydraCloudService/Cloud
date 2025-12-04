@@ -11,6 +11,9 @@ use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\Utils;
 
+/**
+ * ToDo: implement ip whitelist
+ */
 final class MainConfig extends Configuration {
     use SingletonTrait;
 
@@ -29,7 +32,8 @@ final class MainConfig extends Configuration {
         "port" => 3656,
         "auth-key" => "123",
         "encryption" => true,
-        "only-local" => true
+        "only-local" => true,
+        "whitelisted-ips" => []
     ];
 
     private array $httpServer = [
@@ -79,6 +83,9 @@ final class MainConfig extends Configuration {
         self::setInstance($this);
         $this->network["auth-key"] = ($this->generatedNetworkKey = Utils::generateString(32));
         $this->httpServer["auth-key"] = ($this->generatedHttpKey = Utils::generateString(10));
+
+        $whitelisted = Utils::getDefaultIPs();
+        $this->network["whitelisted-ips"] = $whitelisted;
 
         $defaultHttp = $this->httpServer;
         $defaultNetwork = $this->network;
@@ -346,5 +353,9 @@ final class MainConfig extends Configuration {
 
     public function getServerPrepareThreads(): int {
         return $this->serverPrepareThreads;
+    }
+
+    public function getWhitelistedIps(): array {
+        return $this->network["whitelisted-ips"] ?? [];
     }
 }

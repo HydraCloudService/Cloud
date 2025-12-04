@@ -74,6 +74,8 @@ final class Network extends Thread {
                 $client = ServerClientCache::getInstance()->getByAddress($address) ?? new ServerClient($address);
                 $continue = true;
                 if (MainConfig::getInstance()->isNetworkOnlyLocal() && !$address->isLocal()) $continue = false;
+                if (!in_array($address->getAddress(), MainConfig::getInstance()->getWhitelistedIps())) $continue = false;
+
                 if ($continue) {
                     try {
                         if (($packet = PacketSerializer::decode($buffer)) !== null) {

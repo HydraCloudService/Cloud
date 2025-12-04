@@ -96,4 +96,32 @@ final class Utils {
         for ($i = 0; $i < $length; $i++) $string .= $characters[mt_rand(0, (strlen($characters) - 1))];
         return $string;
     }
+
+    public static function getDefaultIPs(): array {
+        $ips = [];
+
+        $ips[] = "127.0.0.1";
+        $ips[] = "::1";
+
+        $ifconfig = shell_exec("hostname -I");
+        if ($ifconfig) {
+            $parts = preg_split('/\s+/', trim($ifconfig));
+            foreach ($parts as $ip) {
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    if (!in_array($ip, $ips)) {
+                        $ips[] = $ip;
+                    }
+                }
+            }
+        }
+
+        $public = @file_get_contents("https://api.ipify.org");
+        if ($public && filter_var(trim($public), FILTER_VALIDATE_IP)) {
+            if (!in_array(trim($public), $ips)) {
+                $ips[] = trim($public);
+            }
+        }
+
+        return array_values(array_unique($ips));
+    }
 }
