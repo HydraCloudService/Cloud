@@ -25,11 +25,9 @@ final class CloudJsonProvider extends CloudProvider {
         $this->notificationsList = new Config(IN_GAME_PATH . "notifications.json", ConfigTypes::JSON());
         $this->maintenanceList = new Config(IN_GAME_PATH . "maintenanceList.json", ConfigTypes::JSON());
 
-        $modules = [];
         foreach (InGameModule::getAll() as $module) {
             if (!in_array($module, $this->modulesConfig->getAll())) {
-                $modules[] = $module;
-                $this->modulesConfig->setAll($modules);
+                $this->modulesConfig->set($module, InGameModule::getModuleState($module));
                 $this->modulesConfig->save();
             }
         }
