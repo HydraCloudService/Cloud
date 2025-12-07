@@ -13,7 +13,8 @@
         "phpunit/phpunit": "^11.4.3",
         "ext-zlib": "*",
         "ext-mbstring": "*",
-        "ext-zip": "*"
+        "ext-zip": "*",
+        "ext-posix": "*"
     },
     "scripts": {
         "test": "vendor/bin/phpunit"

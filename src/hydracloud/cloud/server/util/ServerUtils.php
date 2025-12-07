@@ -274,4 +274,12 @@ final class ServerUtils {
         if (file_exists(CLOUD_PATH . "bin/php7/bin/php")) $path = CLOUD_PATH . "bin/php7/bin/php";
         return $path;
     }
+
+    public static function isProcessRunning(int $pid): bool {
+        if (posix_kill($pid, 0)) {
+            return true;
+        }
+
+        return posix_get_last_error() !== 3;
+    }
 }

@@ -276,6 +276,7 @@ final class CloudServerManager implements Tickable {
                     NotifyType::CRASHED()->send(["%server%" => $server->getName()]);
                 }
 
+                if (ServerUtils::isProcessRunning($server->getCloudServerData()->getProcessId())) TerminalUtils::kill($server->getCloudServerData()->getProcessId());
                 if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
             }
         }
