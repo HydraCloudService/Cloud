@@ -125,12 +125,40 @@ final class ServerUtils {
     }
 
     public static function getFreeId(Template $template): int {
-        if (!isset(self::$ids[$template->getName()])) self::$ids[$template->getName()] = [];
-        for ($i = 1; $i < ($template->getSettings()->getMaxServerCount() + 1); $i++) {
-            if (!in_array($i, self::$ids[$template->getName()])) return $i;
+        $name = $template->getName();
+        $max = $template->getSettings()->getMaxServerCount();
+        $tmpDir = TEMP_PATH;
+
+        if ($max <= 0) {
+            return -1;
         }
+
+        if (!isset(self::$ids[$name])) {
+            self::$ids[$name] = [];
+        }
+
+        self::$ids[$name] = array_values(array_unique(
+            array_filter(self::$ids[$name], static fn($id) => is_int($id) && $id > 0)
+        ));
+
+        $usedIds = array_flip(self::$ids[$name]);
+
+        for ($i = 1; $i <= $max; $i++) {
+            if (isset($usedIds[$i])) {
+                continue;
+            }
+
+            $tmpPath = $tmpDir . $name . '-' . $i;
+            if (is_dir($tmpPath)) {
+                continue;
+            }
+
+            return $i;
+        }
+
         return -1;
     }
+
 
     public static function addPort(int $port): void {
         if (!in_array($port, self::$usedPorts)) self::$usedPorts[] = $port;

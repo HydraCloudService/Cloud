@@ -48,9 +48,15 @@ final class ServerGroupManager {
 
         new ServerGroupRemoveEvent($serverGroup)->call();
 
-        if (file_exists($serverGroup->getPath())) FileUtils::removeDirectory($serverGroup->getPath());
-        if (isset($this->serverGroups[$serverGroup->getName()])) unset($this->serverGroups[$serverGroup->getName()]);
-        CloudLogger::get()->success("Successfully §cremoved §rthe server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
+        if (file_exists($serverGroup->getPath())) {
+            FileUtils::removeDirectoryAsync(
+                $serverGroup->getPath(),
+                function (bool $success, string $path) use ($serverGroup, $startTime): void {
+                    if (isset($this->serverGroups[$serverGroup->getName()])) unset($this->serverGroups[$serverGroup->getName()]);
+                    CloudLogger::get()->success("Successfully §cremoved §rthe server group §b" . $serverGroup->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
+                }
+            );
+        }
     }
 
     public function addTemplate(ServerGroup $serverGroup, Template $template): void {

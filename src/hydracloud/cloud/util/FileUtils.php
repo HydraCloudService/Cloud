@@ -2,6 +2,7 @@
 
 namespace hydracloud\cloud\util;
 
+use Closure;
 use hydracloud\cloud\exception\ExceptionHandler;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use Throwable;
@@ -108,6 +109,31 @@ final class FileUtils {
             null,
             $directoryPath
         ) ?? false;
+    }
+
+    public static function removeDirectoryAsync(
+        string $directoryPath,
+        ?Closure $onFinish = null
+    ): void {
+        AsyncExecutor::execute(function () use ($directoryPath): bool {
+            if (!is_dir($directoryPath)) {
+                return true;
+            }
+
+            FileUtils::removeDirectory($directoryPath);
+
+            return !is_dir($directoryPath);
+        }, function (bool $deleted) use ($directoryPath, $onFinish): void {
+
+            if ($deleted) {
+                if ($onFinish !== null) {
+                    $onFinish(true, $directoryPath);
+                }
+                return;
+            }
+
+            self::removeDirectoryAsync($directoryPath, $onFinish);
+        });
     }
 
     public static function jsonDecode(string $jsonString, int $depth = 512): ?array {

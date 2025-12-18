@@ -22,7 +22,7 @@ class ServerPrepareEntry extends ThreadSafe {
         $serverPath = TEMP_PATH . $this->server . "/";
         $templatePath = TEMPLATES_PATH . $this->template . "/";
 
-        if (file_exists($serverPath) && !$this->static) FileUtils::removeDirectory($serverPath);
+        if (file_exists($serverPath) && !$this->static) FileUtils::removeDirectoryAsync($serverPath);
         FileUtils::copyDirectory($templatePath, $serverPath);
 
         if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/");
