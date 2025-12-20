@@ -44,30 +44,49 @@ final class CloudServerManager implements Tickable {
 
     public function start(Template $template, int $count = 1): ?array {
         $startedServers = [];
+
         if (!$this->canStartMore($template)) {
-            CloudLogger::get()->warn("Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached.");
+            CloudLogger::get()->warn(
+                "Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached."
+            );
             return null;
-        } else {
-            for ($i = 0; $i < $count; $i++) {
-                if (!$this->canStartMore($template)) break;
-
-                if ($this->lastServerStartTime > 0) {
-                    CloudLogger::get()->debug("Time between this and last server start: " . round(microtime(true) - $this->lastServerStartTime, 3) . "s");
-                }
-                $this->lastServerStartTime = microtime(true);
-
-                $id = ServerUtils::getFreeId($template);
-                if ($id !== -1) {
-                    $port = ($template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort());
-                    if ($port !== 0) {
-                        $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
-                        $this->addToProxies($server);
-                        $server->prepare()->then(fn() => $server->start());
-                        $startedServers[] = $server->getName();
-                    }
-                }
-            }
         }
+
+        $startNext = function () use (&$startNext, $template, &$count, &$startedServers) {
+            if ($count-- <= 0 || !$this->canStartMore($template)) {
+                return;
+            }
+
+            $id = ServerUtils::getFreeId($template);
+            if ($id === -1) return;
+
+            $port = $template->getTemplateType() === TemplateType::SERVER()
+                ? ServerUtils::getFreePort()
+                : ServerUtils::getFreeProxyPort();
+
+            if ($port === 0) return;
+
+            $server = new CloudServer(
+                $id,
+                $template->getName(),
+                new CloudServerData(
+                    $port,
+                    $template->getSettings()->getMaxPlayerCount(),
+                    0
+                ),
+                ServerStatus::STARTING()
+            );
+
+            $this->addToProxies($server);
+
+            $server->prepare()->then(function () use ($server, &$startedServers, $startNext) {
+                $server->start();
+                $startedServers[] = $server->getName();
+                $startNext();
+            });
+        };
+
+        $startNext();
         return $startedServers;
     }
 
