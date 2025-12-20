@@ -57,20 +57,15 @@ class CloudServer {
 
     public function prepare(): Promise {
         $promise = new Promise();
-
         CloudLogger::get()->info("§rPreparing the server §b" . $this->getName() . "§r...");
 
-        ServerPreparator::getInstance()->submitEntry(
-            ServerPrepareEntry::fromServer($this),
-            function () use ($promise): void {
-                ServerUtils::copyProperties($this);
-                $promise->resolve(true);
-            }
-        );
+        ServerPreparator::getInstance()->submitEntry(ServerPrepareEntry::fromServer($this), function() use($promise): void {
+            ServerUtils::copyProperties($this);
+            $promise->resolve(true);
+        });
 
         return $promise;
     }
-
 
     public function start(): void {
         CloudServerManager::getInstance()->addToProxies($this);

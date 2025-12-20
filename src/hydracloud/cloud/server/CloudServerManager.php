@@ -42,40 +42,38 @@ final class CloudServerManager implements Tickable {
         self::setInstance($this);
     }
 
-    public function start(Template $template, int $count = 1): ?array {
+    public function start(Template $template, int $count = 1): Promise {
+        $promise = new Promise();
         $startedServers = [];
 
         if (!$this->canStartMore($template)) {
-            CloudLogger::get()->warn(
-                "Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached."
-            );
-            return null;
+            CloudLogger::get()->warn("Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached.");
+            $promise->resolve([]);
+            return $promise;
         }
 
-        $startNext = function () use (&$startNext, $template, &$count, &$startedServers) {
+        $startNext = function () use (
+            &$startNext, $template, &$count, &$startedServers, $promise
+        ) {
             if ($count-- <= 0 || !$this->canStartMore($template)) {
+                $promise->resolve($startedServers);
                 return;
             }
 
             $id = ServerUtils::getFreeId($template);
-            if ($id === -1) return;
+            if ($id === -1) {
+                $startNext();
+                return;
+            }
 
-            $port = $template->getTemplateType() === TemplateType::SERVER()
-                ? ServerUtils::getFreePort()
-                : ServerUtils::getFreeProxyPort();
+            $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
 
-            if ($port === 0) return;
+            if ($port === 0) {
+                $startNext();
+                return;
+            }
 
-            $server = new CloudServer(
-                $id,
-                $template->getName(),
-                new CloudServerData(
-                    $port,
-                    $template->getSettings()->getMaxPlayerCount(),
-                    0
-                ),
-                ServerStatus::STARTING()
-            );
+            $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
 
             $this->addToProxies($server);
 
@@ -87,7 +85,7 @@ final class CloudServerManager implements Tickable {
         };
 
         $startNext();
-        return $startedServers;
+        return $promise;
     }
 
     public function stop(Template|CloudServer|ServerGroup|string $object, bool $force = false): bool {

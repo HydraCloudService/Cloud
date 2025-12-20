@@ -41,7 +41,9 @@ final class StartCommand extends Command {
         } else if (is_string($object)) {
             $templates = explode(" ", $object);
             foreach ($templates as $arg) {
-                if (($argTemplate = TemplateManager::getInstance()->get($arg)) !== null) CloudServerManager::getInstance()->start($argTemplate, $count);
+                if (($argTemplate = TemplateManager::getInstance()->get($arg)) !== null) {
+                    CloudServerManager::getInstance()->start($argTemplate, $count);
+                }
             }
         }
 
