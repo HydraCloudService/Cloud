@@ -238,7 +238,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::START_FAILED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::ONLINE() || $server->getServerStatus() === ServerStatus::FULL() || $server->getServerStatus() === ServerStatus::IN_GAME()) {
                 if (!$server->checkAlive()) {
@@ -260,7 +260,7 @@ final class CloudServerManager implements Tickable {
                         NotifyType::TIMED()->send(["%server%" => $server->getName()]);
                     }
 
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::STOPPING()) {
                 if (($server->getStopTime() + 10) <= time()) {
@@ -278,7 +278,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::CRASHED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
                     TerminalUtils::kill($server->getCloudServerData()->getProcessId());
                 }
             } else if ($server->getServerStatus() === ServerStatus::OFFLINE()) {
@@ -294,7 +294,7 @@ final class CloudServerManager implements Tickable {
                 }
 
                 if (ServerUtils::isProcessRunning($server->getCloudServerData()->getProcessId())) TerminalUtils::kill($server->getCloudServerData()->getProcessId());
-                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
+                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
             }
         }
     }
