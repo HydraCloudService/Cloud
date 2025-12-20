@@ -82,30 +82,23 @@ final class HttpServer extends Thread {
     }
 
     private function handleRequest(Address $address, string $request): string {
-        $continue = true;
-
-        if (MainConfig::getInstance()->isNetworkOnlyLocal() && !$address->isLocal()) $continue = false;
-        if (!in_array($address->getAddress(), MainConfig::getInstance()->getWhitelistedIps())) $continue = false;
-
-        if ($continue) {
-            $request = HttpUtils::parseRequest($address, $request);
-            CloudLogger::get()->debug("Parsing HTTP request from " . $address . "...");
-            if (!$request instanceof Request) {
-                CloudLogger::get()->debug("HTTP request from " . $address . " could not be parsed, sending response with code 500...");
-                return new Response(500);
-            }
-
-            TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_REQUEST_IN, $request, $address);
-
-            if (Router::getInstance()->isRegistered($request)) return Router::getInstance()->execute($request);
-            CloudLogger::get()->debug("No route found for " . $request->data()->method() . " HTTP request from " . $request->data()->address() . ", sending 404 response...");
-            $response = new Response(404);
-            if ($this->invalidUrlHandler !== null) ($this->invalidUrlHandler)($request, $response);
-
-            TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_RESPONSE_OUT, $request, $response, $address);
-
-            return $response;
+        $request = HttpUtils::parseRequest($address, $request);
+        CloudLogger::get()->debug("Parsing HTTP request from " . $address . "...");
+        if (!$request instanceof Request) {
+            CloudLogger::get()->debug("HTTP request from " . $address . " could not be parsed, sending response with code 500...");
+            return new Response(500);
         }
+
+        TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_REQUEST_IN, $request, $address);
+
+        if (Router::getInstance()->isRegistered($request)) return Router::getInstance()->execute($request);
+        CloudLogger::get()->debug("No route found for " . $request->data()->method() . " HTTP request from " . $request->data()->address() . ", sending 404 response...");
+        $response = new Response(404);
+        if ($this->invalidUrlHandler !== null) ($this->invalidUrlHandler)($request, $response);
+
+        TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_RESPONSE_OUT, $request, $response, $address);
+
+        return $response;
     }
 
     public function init(): void {
@@ -142,7 +135,10 @@ final class HttpServer extends Thread {
 
                     try {
                         $write = true;
+
                         if (MainConfig::getInstance()->isHttpServerOnlyLocal() && !$client->getAddress()->isLocal()) $write = false;
+                        if (!in_array($client->getAddress(), MainConfig::getInstance()->getWhitelistedIps())) $write = false;
+
                         CloudLogger::get()->debug(!$write ? "Can't handle HTTP request from " . $client->getAddress() . "..." : "Handling HTTP request from " . $client->getAddress() . "...");
                         if ($write) $client->write($this->handleRequest($client->getAddress(), $buf));
                         $client->close();
