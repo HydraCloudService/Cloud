@@ -63,13 +63,6 @@ class CloudServer {
         ServerPreparator::getInstance()->submitEntry(
             ServerPrepareEntry::fromServer($this),
             function () use ($promise): void {
-
-                $serverPath = TEMP_PATH . $this->getName() . "/";
-
-                if (!is_dir($serverPath)) {
-                    @mkdir($serverPath, 0777, true);
-                }
-
                 ServerUtils::copyProperties($this);
                 $promise->resolve(true);
             }

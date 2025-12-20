@@ -23,22 +23,18 @@ class ServerPrepareEntry extends ThreadSafe {
         $templatePath = TEMPLATES_PATH . $this->template . "/";
 
         if (file_exists($serverPath) && !$this->static) {
-            FileUtils::removeDirectoryAsync($serverPath, function(bool $success, string $path) use ($templatePath, $serverPath) {
-                if ($success) {
-                    FileUtils::copyDirectory($templatePath, $serverPath);
+            FileUtils::removeDirectory($serverPath);
+            FileUtils::copyDirectory($templatePath, $serverPath);
 
-                    if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/"); else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
+            if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/"); else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
+            if ($this->group !== null) FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
 
-                    if ($this->group !== null) FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
-
-                    if (file_exists($serverPath . "server.log") || file_exists($serverPath . "logs/server.log")) {
-                        unlink(match ($this->templateType) {
-                            TemplateType::PROXY()->getName() => $serverPath . "logs/server.log",
-                            default => $serverPath . "server.log"
-                        });
-                    }
-                }
-            });
+            if (file_exists($serverPath . "server.log") || file_exists($serverPath . "logs/server.log")) {
+                unlink(match ($this->templateType) {
+                    TemplateType::PROXY()->getName() => $serverPath . "logs/server.log",
+                    default => $serverPath . "server.log"
+                });
+            }
         }
     }
 
