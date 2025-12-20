@@ -24,17 +24,18 @@ class ServerPrepareEntry extends ThreadSafe {
 
         if (file_exists($serverPath) && !$this->static) {
             FileUtils::removeDirectory($serverPath);
-            FileUtils::copyDirectory($templatePath, $serverPath);
+        }
 
-            if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/"); else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
-            if ($this->group !== null) FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
+        FileUtils::copyDirectory($templatePath, $serverPath);
 
-            if (file_exists($serverPath . "server.log") || file_exists($serverPath . "logs/server.log")) {
-                unlink(match ($this->templateType) {
-                    TemplateType::PROXY()->getName() => $serverPath . "logs/server.log",
-                    default => $serverPath . "server.log"
-                });
-            }
+        if ($this->templateType === TemplateType::SERVER()->getName()) FileUtils::copyDirectory(SERVER_PLUGINS_PATH, $serverPath . "plugins/"); else FileUtils::copyDirectory(PROXY_PLUGINS_PATH, $serverPath . "plugins/");
+        if ($this->group !== null) FileUtils::copyDirectory(SERVER_GROUPS_PATH . $this->group . "/", $serverPath);
+
+        if (file_exists($serverPath . "server.log") || file_exists($serverPath . "logs/server.log")) {
+            unlink(match ($this->templateType) {
+                TemplateType::PROXY()->getName() => $serverPath . "logs/server.log",
+                default => $serverPath . "server.log"
+            });
         }
     }
 
