@@ -127,33 +127,26 @@ final class ServerUtils {
     public static function getFreeId(Template $template): int {
         $name = $template->getName();
         $max = $template->getSettings()->getMaxServerCount();
-        $tmpDir = TEMP_PATH;
 
-        if ($max <= 0) {
+        if ($max < 1) {
             return -1;
         }
 
-        if (!isset(self::$ids[$name])) {
-            self::$ids[$name] = [];
-        }
+        self::$ids[$name] ??= [];
+        self::$ids[$name] = array_values(array_unique(array_filter(self::$ids[$name], static fn(int $id): bool => $id > 0)));
 
-        self::$ids[$name] = array_values(array_unique(
-            array_filter(self::$ids[$name], static fn($id) => is_int($id) && $id > 0)
-        ));
+        $usedIds = array_fill_keys(self::$ids[$name], true);
 
-        $usedIds = array_flip(self::$ids[$name]);
-
-        for ($i = 1; $i <= $max; $i++) {
-            if (isset($usedIds[$i])) {
+        for ($id = 1; $id <= $max; $id++) {
+            if (isset($usedIds[$id])) {
                 continue;
             }
 
-            $tmpPath = $tmpDir . $name . '-' . $i;
-            if (is_dir($tmpPath)) {
+            if (is_dir(TEMP_PATH . $name . '-' . $id)) {
                 continue;
             }
 
-            return $i;
+            return $id;
         }
 
         return -1;
