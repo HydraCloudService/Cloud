@@ -159,7 +159,6 @@ final class ServerUtils {
         return -1;
     }
 
-
     public static function addPort(int $port): void {
         if (!in_array($port, self::$usedPorts)) self::$usedPorts[] = $port;
     }
