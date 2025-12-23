@@ -30,6 +30,7 @@ use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\terminal\TerminalUtils;
 use hydracloud\cloud\util\tick\Tickable;
+use Ramsey\Uuid\Uuid;
 
 final class CloudServerManager implements Tickable {
     use SingletonTrait;
@@ -66,6 +67,8 @@ final class CloudServerManager implements Tickable {
                 return;
             }
 
+            $uuid = Uuid::uuid4()->toString();
+
             $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
 
             if ($port === 0) {
@@ -73,7 +76,7 @@ final class CloudServerManager implements Tickable {
                 return;
             }
 
-            $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
+            $server = new CloudServer($id, $uuid, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
 
             $this->addToProxies($server);
 

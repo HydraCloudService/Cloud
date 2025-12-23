@@ -1,7 +1,7 @@
 name: "Build"
 on:
   push:
-    branches: [ "master", "indev" ]
+    branches: [ "*" ]
 
 permissions:
   contents: write

@@ -9,6 +9,7 @@ use hydracloud\cloud\server\CloudServer;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\util\FileUtils;
+use Random\RandomException;
 
 final class ServerUtils {
 
@@ -142,14 +143,22 @@ final class ServerUtils {
                 continue;
             }
 
-            if (is_dir(TEMP_PATH . $name . '-' . $id)) {
-                continue;
-            }
-
             return $id;
         }
 
         return -1;
+    }
+
+    /**
+     * @throws RandomException
+     */
+    public static function createUUIDv4(): string {
+        $data = random_bytes(16);
+
+        $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
+        $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 
     public static function addPort(int $port): void {
