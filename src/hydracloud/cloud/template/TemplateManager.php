@@ -62,16 +62,11 @@ final class TemplateManager implements Tickable {
         CloudServerManager::getInstance()->stop($template, true);
 
         if (file_exists($template->getPath())) {
-            FileUtils::removeDirectoryAsync(
-                $template->getPath(),
-                function (bool $deleted) use ($template, $startTime) {
-                    if ($deleted) {
-                        if (isset($this->templates[$template->getName()])) unset($this->templates[$template->getName()]);
-                        CloudLogger::get()->success("Successfully §cremoved §rthe template §b" . $template->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
-                        TemplateSyncPacket::create($template, true)->broadcastPacket();
-                    }
-                }
-            );
+            FileUtils::removeDirectory($template->getPath());
+
+            if (isset($this->templates[$template->getName()])) unset($this->templates[$template->getName()]);
+            CloudLogger::get()->success("Successfully §cremoved §rthe template §b" . $template->getName() . "§r. §8(§rTook §b" . number_format(microtime(true) - $startTime, 3) . "s§8)");
+            TemplateSyncPacket::create($template, true)->broadcastPacket();
         }
     }
 

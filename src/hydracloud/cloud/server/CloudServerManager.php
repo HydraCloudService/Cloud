@@ -30,6 +30,7 @@ use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\terminal\TerminalUtils;
 use hydracloud\cloud\util\tick\Tickable;
+use Ramsey\Uuid\Uuid;
 
 final class CloudServerManager implements Tickable {
     use SingletonTrait;
@@ -66,6 +67,8 @@ final class CloudServerManager implements Tickable {
                 return;
             }
 
+            $uuid = Uuid::uuid4()->toString();
+
             $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
 
             if ($port === 0) {
@@ -73,7 +76,7 @@ final class CloudServerManager implements Tickable {
                 return;
             }
 
-            $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
+            $server = new CloudServer($id, $uuid, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
 
             $this->addToProxies($server);
 
@@ -238,7 +241,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::START_FAILED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::ONLINE() || $server->getServerStatus() === ServerStatus::FULL() || $server->getServerStatus() === ServerStatus::IN_GAME()) {
                 if (!$server->checkAlive()) {
@@ -260,7 +263,7 @@ final class CloudServerManager implements Tickable {
                         NotifyType::TIMED()->send(["%server%" => $server->getName()]);
                     }
 
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::STOPPING()) {
                 if (($server->getStopTime() + 10) <= time()) {
@@ -278,7 +281,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::CRASHED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                     TerminalUtils::kill($server->getCloudServerData()->getProcessId());
                 }
             } else if ($server->getServerStatus() === ServerStatus::OFFLINE()) {
@@ -294,7 +297,7 @@ final class CloudServerManager implements Tickable {
                 }
 
                 if (ServerUtils::isProcessRunning($server->getCloudServerData()->getProcessId())) TerminalUtils::kill($server->getCloudServerData()->getProcessId());
-                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
             }
         }
     }

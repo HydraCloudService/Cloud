@@ -5,6 +5,7 @@ namespace hydracloud\cloud;
 use hydracloud\cloud\server\prepare\ServerPreparator;
 use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\traffic\TrafficMonitorManager;
+use hydracloud\cloud\util\AsyncExecutor;
 use Phar;
 use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\event\EventManager;
@@ -267,6 +268,12 @@ final class HydraCloud {
     }
 }
 
+if (Phar::running() !== "") {
+    require Phar::running() . "/vendor/autoload.php";
+} else {
+    require __DIR__ . "/vendor/autoload.php";
+}
+
 require_once "loader/ClassLoader.php";
 require_once "HydraCloud.php";
 
@@ -291,6 +298,7 @@ define("IN_GAME_PATH", STORAGE_PATH . "inGame/");
 define("WEB_PATH", STORAGE_PATH . "web/");
 define("LOG_PATH", STORAGE_PATH . "cloud.log");
 define("TEMP_PATH", CLOUD_PATH . "tmp/");
+define("STATIC_PATH", CLOUD_PATH . "static/");
 define("TEMPLATES_PATH", CLOUD_PATH . "templates/");
 define("SERVER_GROUPS_PATH", CLOUD_PATH . "groups/");
 define("FIRST_RUN", !file_exists(STORAGE_PATH . "config.json"));
@@ -309,6 +317,7 @@ if (!file_exists(LOG_PATH)) file_put_contents(LOG_PATH, "");
 if (!file_exists(TEMPLATES_PATH)) mkdir(TEMPLATES_PATH);
 if (!file_exists(SERVER_GROUPS_PATH)) mkdir(SERVER_GROUPS_PATH);
 if (!file_exists(TEMP_PATH)) mkdir(TEMP_PATH);
+if (!file_exists(STATIC_PATH)) mkdir(STATIC_PATH);
 
 $classLoader = new ClassLoader();
 $classLoader->init();

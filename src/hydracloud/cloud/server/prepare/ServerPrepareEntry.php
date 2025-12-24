@@ -12,6 +12,7 @@ class ServerPrepareEntry extends ThreadSafe {
 
     public function __construct(
         private readonly string $server,
+        private readonly string $uuid,
         private readonly string $template,
         private readonly ?string $group,
         private readonly bool $static,
@@ -19,11 +20,11 @@ class ServerPrepareEntry extends ThreadSafe {
     ) {}
 
     public function run(): void {
-        $serverPath = TEMP_PATH . $this->server . "/";
+        $serverPath = (!$this->static) ? TEMP_PATH . $this->uuid . "/" : STATIC_PATH . $this->server . "/";
         $templatePath = TEMPLATES_PATH . $this->template . "/";
 
         if (file_exists($serverPath) && !$this->static) {
-            FileUtils::removeDirectoryAsync($serverPath);
+            FileUtils::removeDirectory($serverPath);
         }
 
         FileUtils::copyDirectory($templatePath, $serverPath);
@@ -61,17 +62,19 @@ class ServerPrepareEntry extends ThreadSafe {
 
     public static function create(
         string $server,
+        string $uuid,
         string $template,
         ?string $group,
         bool $static,
         string $templateType
     ): self {
-        return new self($server, $template, $group, $static, $templateType);
+        return new self($server, $uuid, $template, $group, $static, $templateType);
     }
 
     public static function fromServer(CloudServer $server): self {
         return self::create(
             $server->getName(),
+            $server->getUuid(),
             $server->getTemplateName(),
             ServerGroupManager::getInstance()->get($server->getTemplate())?->getName(),
             $server->getTemplate()->getSettings()->isStatic(),

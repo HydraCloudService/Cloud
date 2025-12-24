@@ -9,6 +9,7 @@ use hydracloud\cloud\server\CloudServer;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\util\FileUtils;
+use Random\RandomException;
 
 final class ServerUtils {
 
@@ -139,10 +140,6 @@ final class ServerUtils {
 
         for ($id = 1; $id <= $max; $id++) {
             if (isset($usedIds[$id])) {
-                continue;
-            }
-
-            if (is_dir(TEMP_PATH . $name . '-' . $id)) {
                 continue;
             }
 
