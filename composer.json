@@ -14,7 +14,8 @@
         "ext-zlib": "*",
         "ext-mbstring": "*",
         "ext-zip": "*",
-        "ext-posix": "*"
+        "ext-posix": "*",
+        "ramsey/uuid": "*"
     },
     "scripts": {
         "test": "vendor/bin/phpunit"
