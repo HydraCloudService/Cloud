@@ -42,7 +42,7 @@ final readonly class Library {
 
         @unlink($this->fileLocation);
         if ($this->copySource !== "") {
-            FileUtils::removeDirectoryAsync($this->deletionDir ?? $this->copySource);
+            FileUtils::removeDirectory($this->deletionDir ?? $this->copySource);
         }
         return true;
     }
