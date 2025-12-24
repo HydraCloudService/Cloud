@@ -26,6 +26,7 @@ use hydracloud\cloud\template\TemplateManager;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\FileUtils;
+use hydracloud\cloud\util\misc\Queue;
 use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\terminal\TerminalUtils;
@@ -39,56 +40,41 @@ final class CloudServerManager implements Tickable {
     private array $servers = [];
     private float $lastServerStartTime = 0;
 
+    /** @var Queue<CloudServer> */
+    private Queue $serverPrepareQueue;
+    /** @var Queue<CloudServer> */
+    private Queue $serverStartQueue;
+
     public function __construct() {
         self::setInstance($this);
+
+        $this->serverPrepareQueue = Queue::fromClass(CloudServer::class);
+        $this->serverStartQueue = Queue::fromClass(CloudServer::class);
     }
 
-    public function start(Template $template, int $count = 1): Promise {
-        $promise = new Promise();
-        $startedServers = [];
+    public function start(Template $template, int $count = 1): void {
+        if (!$this->checkCapacity($template)) {
+            CloudLogger::get()->warn("Can not start any more servers of §b{} §rdue to the max servers reached.", $template->getName());
+        } else {
+            for ($i = 0; $i < $count; $i++) {
+                if (!$this->checkCapacity($template)) break;
+                if ($this->lastServerStartTime > 0) {
+                    CloudLogger::get()->debug("Time between this and last server start: " . round(microtime(true) - $this->lastServerStartTime, 3) . "s");
+                }
 
-        if (!$this->canStartMore($template)) {
-            CloudLogger::get()->warn("Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached.");
-            $promise->resolve([]);
-            return $promise;
+                $this->lastServerStartTime = microtime(true);
+                $id = ServerUtils::getFreeId($template);
+                if ($id !== -1) {
+                    $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
+                    if ($port > 0) {
+                        $uuid = Uuid::uuid4()->toString();
+                        $server = new CloudServer($id, $uuid, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
+                        $this->addToProxies($server);
+                        $this->serverPrepareQueue->add($server);
+                    }
+                }
+            }
         }
-
-        $startNext = function () use (
-            &$startNext, $template, &$count, &$startedServers, $promise
-        ) {
-            if ($count-- <= 0 || !$this->canStartMore($template)) {
-                $promise->resolve($startedServers);
-                return;
-            }
-
-            $id = ServerUtils::getFreeId($template);
-            if ($id === -1) {
-                $startNext();
-                return;
-            }
-
-            $uuid = Uuid::uuid4()->toString();
-
-            $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
-
-            if ($port === 0) {
-                $startNext();
-                return;
-            }
-
-            $server = new CloudServer($id, $uuid, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
-
-            $this->addToProxies($server);
-
-            $server->prepare()->then(function () use ($server, &$startedServers, $startNext) {
-                $server->start();
-                $startedServers[] = $server->getName();
-                $startNext();
-            });
-        };
-
-        $startNext();
-        return $promise;
     }
 
     public function stop(Template|CloudServer|ServerGroup|string $object, bool $force = false): bool {
@@ -300,6 +286,14 @@ final class CloudServerManager implements Tickable {
                 if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
             }
         }
+
+        if (!$this->serverPrepareQueue->isEmpty()) {
+            ($server = $this->serverPrepareQueue->next())->prepare()
+                ->then(fn() => $this->serverStartQueue->add($server))
+                ->failure(fn() => CloudLogger::get()->warn("§cFailed to prepare server §e%s§c.", $server->getName()));
+        }
+
+        if (!$this->serverStartQueue->isEmpty()) $this->serverStartQueue->next()->start();
     }
 
     /** @internal */

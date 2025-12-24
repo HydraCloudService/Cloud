@@ -6,6 +6,7 @@ use hydracloud\cloud\server\prepare\ServerPreparator;
 use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\traffic\TrafficMonitorManager;
 use hydracloud\cloud\util\AsyncExecutor;
+use hydracloud\cloud\util\misc\Queue;
 use Phar;
 use hydracloud\cloud\config\impl\MainConfig;
 use hydracloud\cloud\event\EventManager;
@@ -50,6 +51,7 @@ final class HydraCloud {
 
     private array $userNotificationsOnStart = [];
 
+    private Queue $startNotificationQueue;
     private SleeperHandler $sleeperHandler;
     private Terminal $terminal;
     private Network $network;
@@ -104,6 +106,7 @@ final class HydraCloud {
         SoftwareManager::getInstance()->downloadAll();
         TerminalUtils::clear();
 
+        $this->startNotificationQueue = Queue::fromType([]);
         $this->sleeperHandler = new SleeperHandler();
         $this->terminal = new Terminal();
         $this->terminal->start();
@@ -162,11 +165,14 @@ final class HydraCloud {
             UpdateChecker::getInstance()->check();
         }
 
+        while (($entry = $this->startNotificationQueue->next()) !== null) {
+            CloudLogger::get()->send($entry[0], $entry[1], ...$entry[2]);
+        }
+
         $startedTime = (microtime(true) - $this->startTime);
         new CloudStartedEvent($startedTime)->call();
         CloudLogger::get()->success("§bCloud §rhas been §astarted§r. §8(§rTook §b" . number_format($startedTime, 3) . "s§8)");
-        foreach ($this->userNotificationsOnStart as $entry) CloudLogger::get()->send($entry[1], $entry[0]);
-        $this->userNotificationsOnStart = [];
+
         if (count(TemplateManager::getInstance()->getAll()) == 0 && FIRST_RUN) {
             CloudLogger::get()->info("No templates found, starting the setup...");
             new TemplateSetup()->startSetup();
@@ -185,8 +191,9 @@ final class HydraCloud {
         exit(1);
     }
 
-    public function notifyOnStart(string $message, ?CloudLogLevel $logLevel = null): void {
-        $this->userNotificationsOnStart[] = [$message, $logLevel ?? CloudLogLevel::INFO()];
+    public function addStartNotification(string $logMessage, ?CloudLogLevel $logLevel = null, mixed... $params): self {
+        $this->startNotificationQueue->add([$logLevel ?? CloudLogLevel::INFO(), $logMessage, $params]);
+        return $this;
     }
 
     public function tick(): void {
@@ -241,6 +248,10 @@ final class HydraCloud {
 
     public function getTerminal(): Terminal {
         return $this->terminal;
+    }
+
+    public function getStartNotificationQueue(): Queue {
+        return $this->startNotificationQueue;
     }
 
     public function getSleeperHandler(): SleeperHandler {
