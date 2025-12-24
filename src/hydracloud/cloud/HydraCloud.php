@@ -49,8 +49,6 @@ final class HydraCloud {
     private int $tick = 0;
     private float $startTime = 0;
 
-    private array $userNotificationsOnStart = [];
-
     private Queue $startNotificationQueue;
     private SleeperHandler $sleeperHandler;
     private Terminal $terminal;
