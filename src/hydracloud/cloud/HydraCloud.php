@@ -5,7 +5,6 @@ namespace hydracloud\cloud;
 use hydracloud\cloud\server\prepare\ServerPreparator;
 use hydracloud\cloud\terminal\log\level\CloudLogLevel;
 use hydracloud\cloud\traffic\TrafficMonitorManager;
-use hydracloud\cloud\util\AsyncExecutor;
 use hydracloud\cloud\util\misc\Queue;
 use Phar;
 use hydracloud\cloud\config\impl\MainConfig;
