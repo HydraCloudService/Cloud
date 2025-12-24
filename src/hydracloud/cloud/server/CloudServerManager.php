@@ -53,11 +53,11 @@ final class CloudServerManager implements Tickable {
     }
 
     public function start(Template $template, int $count = 1): void {
-        if (!$this->checkCapacity($template)) {
-            CloudLogger::get()->warn("Can not start any more servers of §b{} §rdue to the max servers reached.", $template->getName());
+        if (!$this->canStartMore($template)) {
+            CloudLogger::get()->warn("Can not start any more servers of §b%s §rdue to the max servers reached.", $template->getName());
         } else {
             for ($i = 0; $i < $count; $i++) {
-                if (!$this->checkCapacity($template)) break;
+                if (!$this->canStartMore($template)) break;
                 if ($this->lastServerStartTime > 0) {
                     CloudLogger::get()->debug("Time between this and last server start: " . round(microtime(true) - $this->lastServerStartTime, 3) . "s");
                 }
