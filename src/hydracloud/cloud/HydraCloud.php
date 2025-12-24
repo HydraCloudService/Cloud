@@ -268,7 +268,12 @@ final class HydraCloud {
     }
 }
 
-require "/vendor/autoload.php";
+if (Phar::running() !== "") {
+    require Phar::running() . "/vendor/autoload.php";
+} else {
+    require __DIR__ . "/vendor/autoload.php";
+}
+
 require_once "loader/ClassLoader.php";
 require_once "HydraCloud.php";
 
