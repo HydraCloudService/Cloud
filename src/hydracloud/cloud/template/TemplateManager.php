@@ -35,6 +35,33 @@ final class TemplateManager implements Tickable {
                 if (array_sum(array_map(fn(Template $template) => $template->getSettings()->getMinServerCount(), array_filter($this->templates, fn(Template $template) => $template->getSettings()->isAutoStart()))) >= 9) {
                     CloudLogger::get()->warn("Your total active server count exceeds §b9§8, §rtherefore you should set §8'§bserverPrepareThreads§8' §rinside your §bconfig.json §rto at least §b1 §ror §b2 §rand restart the the §bcloud§r.");
                 }
+
+                foreach (scandir(STATIC_PATH) as $folder) {
+                    if ($folder === '.' || $folder === '..') {
+                        continue;
+                    }
+
+                    $name = explode('-', $folder, 2)[0];
+                    if (!isset($this->templates[$name]) || !$this->templates[$name] instanceof Template) {
+                        FileUtils::removeDirectory(STATIC_PATH . $folder);
+                        continue;
+                    }
+
+                    if (is_dir(STATIC_PATH . '/' . $folder) && !$this->templates[$name]->getSettings()->isStatic()) {
+                        FileUtils::removeDirectory(STATIC_PATH . $folder);
+                    }
+                }
+
+                foreach (scandir(TEMP_PATH) as $folder) {
+                    if ($folder === '.' || $folder === '..') {
+                        continue;
+                    }
+
+                    if (is_dir(TEMP_PATH . '/' . $folder)) {
+                        FileUtils::removeDirectory(TEMP_PATH . $folder);
+                    }
+                }
+
                 ServerGroupManager::getInstance()->load();
             });
     }
