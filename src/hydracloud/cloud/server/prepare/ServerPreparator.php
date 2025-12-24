@@ -62,10 +62,7 @@ class ServerPreparator {
 
     protected function getLeastBusyThread(): ServerPrepareThread {
         $threads = $this->threads;
-        usort(
-            $threads,
-            static fn(ServerPrepareThread $a, ServerPrepareThread $b) => $a->getPrepareQueue()->count() <=> $b->getPrepareQueue()->count()
-        );
+        usort($threads, static fn(ServerPrepareThread $a, ServerPrepareThread $b) => $a->getPrepareQueue()->count() <=> $b->getPrepareQueue()->count());
         return $threads[0];
     }
 
