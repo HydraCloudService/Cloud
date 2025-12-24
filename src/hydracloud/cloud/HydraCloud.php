@@ -268,6 +268,7 @@ final class HydraCloud {
     }
 }
 
+require "/vendor/autoload.php";
 require_once "loader/ClassLoader.php";
 require_once "HydraCloud.php";
 
