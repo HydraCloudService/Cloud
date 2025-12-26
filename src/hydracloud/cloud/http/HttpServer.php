@@ -89,22 +89,14 @@ final class HttpServer extends Thread {
             return new Response(500);
         }
 
-        TrafficMonitorManager::getInstance()->callHandlers(
-            TrafficMonitorManager::TRAFFIC_HTTP,
-            HttpTrafficMonitor::HTTP_MODE_REQUEST_IN,
-            $request, $address
-        );
+        TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_REQUEST_IN, $request, $address);
 
         if (Router::getInstance()->isRegistered($request)) return Router::getInstance()->execute($request);
         CloudLogger::get()->debug("No route found for " . $request->data()->method() . " HTTP request from " . $request->data()->address() . ", sending 404 response...");
         $response = new Response(404);
         if ($this->invalidUrlHandler !== null) ($this->invalidUrlHandler)($request, $response);
 
-        TrafficMonitorManager::getInstance()->callHandlers(
-            TrafficMonitorManager::TRAFFIC_HTTP,
-            HttpTrafficMonitor::HTTP_MODE_RESPONSE_OUT,
-            $request, $response, $address
-        );
+        TrafficMonitorManager::getInstance()->callHandlers(TrafficMonitorManager::TRAFFIC_HTTP, HttpTrafficMonitor::HTTP_MODE_RESPONSE_OUT, $request, $response, $address);
 
         return $response;
     }
@@ -143,7 +135,10 @@ final class HttpServer extends Thread {
 
                     try {
                         $write = true;
+
                         if (MainConfig::getInstance()->isHttpServerOnlyLocal() && !$client->getAddress()->isLocal()) $write = false;
+                        if (!in_array($client->getAddress(), MainConfig::getInstance()->getWhitelistedIps())) $write = false;
+
                         CloudLogger::get()->debug(!$write ? "Can't handle HTTP request from " . $client->getAddress() . "..." : "Handling HTTP request from " . $client->getAddress() . "...");
                         if ($write) $client->write($this->handleRequest($client->getAddress(), $buf));
                         $client->close();
@@ -169,7 +164,9 @@ final class HttpServer extends Thread {
 
     public function accept(): ?SocketClient {
         if (!$this->connected) return null;
-        if (($c = @socket_accept($this->socket)) !== false && $c instanceof Socket) return SocketClient::fromSocket($c);
+        if (($c = @socket_accept($this->socket)) !== false && $c instanceof Socket) {
+            return SocketClient::fromSocket($c);
+        }
         return null;
     }
 

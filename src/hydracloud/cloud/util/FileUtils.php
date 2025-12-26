@@ -111,31 +111,6 @@ final class FileUtils {
         ) ?? false;
     }
 
-    public static function removeDirectoryAsync(
-        string $directoryPath,
-        ?Closure $onFinish = null
-    ): void {
-        AsyncExecutor::execute(function () use ($directoryPath): bool {
-            if (!is_dir($directoryPath)) {
-                return true;
-            }
-
-            FileUtils::removeDirectory($directoryPath);
-
-            return !is_dir($directoryPath);
-        }, function (bool $deleted) use ($directoryPath, $onFinish): void {
-
-            if ($deleted) {
-                if ($onFinish !== null) {
-                    $onFinish(true, $directoryPath);
-                }
-                return;
-            }
-
-            self::removeDirectoryAsync($directoryPath, $onFinish);
-        });
-    }
-
     public static function jsonDecode(string $jsonString, int $depth = 512): ?array {
         return ExceptionHandler::tryCatch(
             function (string $jsonString, int $depth): ?array {

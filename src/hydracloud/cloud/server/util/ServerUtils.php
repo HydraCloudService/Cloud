@@ -9,6 +9,7 @@ use hydracloud\cloud\server\CloudServer;
 use hydracloud\cloud\template\Template;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\util\FileUtils;
+use Random\RandomException;
 
 final class ServerUtils {
 
@@ -127,38 +128,26 @@ final class ServerUtils {
     public static function getFreeId(Template $template): int {
         $name = $template->getName();
         $max = $template->getSettings()->getMaxServerCount();
-        $tmpDir = TEMP_PATH;
 
-        if ($max <= 0) {
+        if ($max < 1) {
             return -1;
         }
 
-        if (!isset(self::$ids[$name])) {
-            self::$ids[$name] = [];
-        }
+        self::$ids[$name] ??= [];
+        self::$ids[$name] = array_values(array_unique(array_filter(self::$ids[$name], static fn(int $id): bool => $id > 0)));
 
-        self::$ids[$name] = array_values(array_unique(
-            array_filter(self::$ids[$name], static fn($id) => is_int($id) && $id > 0)
-        ));
+        $usedIds = array_fill_keys(self::$ids[$name], true);
 
-        $usedIds = array_flip(self::$ids[$name]);
-
-        for ($i = 1; $i <= $max; $i++) {
-            if (isset($usedIds[$i])) {
+        for ($id = 1; $id <= $max; $id++) {
+            if (isset($usedIds[$id])) {
                 continue;
             }
 
-            $tmpPath = $tmpDir . $name . '-' . $i;
-            if (is_dir($tmpPath)) {
-                continue;
-            }
-
-            return $i;
+            return $id;
         }
 
         return -1;
     }
-
 
     public static function addPort(int $port): void {
         if (!in_array($port, self::$usedPorts)) self::$usedPorts[] = $port;
@@ -266,7 +255,18 @@ final class ServerUtils {
 
     public static function executeWithStartCommand(string $path, string $name, string $softwareStartCommand): void {
         if (self::$startCommand == "") return;
-        passthru("cd " . $path . " && " . str_replace(["%name%", "%start_command%", "%SOFTWARE_PATH%", "%CLOUD_PATH%"], [$name, $softwareStartCommand, SOFTWARE_PATH, CLOUD_PATH], self::$startCommand));
+        passthru("cd " . $path . " && " . str_replace(
+            [
+                "%name%",
+                "%start_command%",
+                "%SOFTWARE_PATH%",
+                "%CLOUD_PATH%"],
+            [
+                $name,
+                $softwareStartCommand,
+                SOFTWARE_PATH,
+                CLOUD_PATH
+            ], self::$startCommand));
     }
 
     public static function checkTmux(): bool {

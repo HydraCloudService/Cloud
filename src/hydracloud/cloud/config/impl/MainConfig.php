@@ -141,19 +141,19 @@ final class MainConfig extends Configuration {
                 $end = $this->serverPortRanges[$key]["end"];
 
                 if ($start <= 0 || $end <= 0) {
-                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §7or §bend §7can not be less or equal to §b0§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->addStartNotification("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §7or §bend §7can not be less or equal to §b0§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                     continue;
                 }
 
                 if ($start > $end) {
-                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §ris §chigher §rthan §bend§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->addStartNotification("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bStart §ris §chigher §rthan §bend§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                     continue;
                 }
 
                 if (($start + 50) > $end) {
-                    HydraCloud::getInstance()->notifyOnStart("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bEnd §rneeds to be at least §b50 ports higher §rthan §bstart§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
+                    HydraCloud::getInstance()->addStartNotification("Invalid port range §8(§b{$start}§8-§b{$end}§8) §rfor server type §8'§b" . $key . "§8'§r: §bEnd §rneeds to be at least §b50 ports higher §rthan §bstart§r: §cResetting the entry, please review your config...", CloudLogLevel::WARN());
                     unset($this->serverPortRanges[$key]);
                 }
             }

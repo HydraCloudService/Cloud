@@ -26,10 +26,12 @@ use hydracloud\cloud\template\TemplateManager;
 use hydracloud\cloud\template\TemplateType;
 use hydracloud\cloud\terminal\log\CloudLogger;
 use hydracloud\cloud\util\FileUtils;
+use hydracloud\cloud\util\misc\Queue;
 use hydracloud\cloud\util\promise\Promise;
 use hydracloud\cloud\util\SingletonTrait;
 use hydracloud\cloud\util\terminal\TerminalUtils;
 use hydracloud\cloud\util\tick\Tickable;
+use Ramsey\Uuid\Uuid;
 
 final class CloudServerManager implements Tickable {
     use SingletonTrait;
@@ -38,37 +40,41 @@ final class CloudServerManager implements Tickable {
     private array $servers = [];
     private float $lastServerStartTime = 0;
 
+    /** @var Queue<CloudServer> */
+    private Queue $serverPrepareQueue;
+    /** @var Queue<CloudServer> */
+    private Queue $serverStartQueue;
+
     public function __construct() {
         self::setInstance($this);
+
+        $this->serverPrepareQueue = Queue::fromClass(CloudServer::class);
+        $this->serverStartQueue = Queue::fromClass(CloudServer::class);
     }
 
-    public function start(Template $template, int $count = 1): ?array {
-        $startedServers = [];
+    public function start(Template $template, int $count = 1): void {
         if (!$this->canStartMore($template)) {
-            CloudLogger::get()->warn("Can not start any more servers of §b" . $template->getName() . " §rdue to the max servers reached.");
-            return null;
+            CloudLogger::get()->warn("Can not start any more servers of §b%s §rdue to the max servers reached.", $template->getName());
         } else {
             for ($i = 0; $i < $count; $i++) {
                 if (!$this->canStartMore($template)) break;
-
                 if ($this->lastServerStartTime > 0) {
                     CloudLogger::get()->debug("Time between this and last server start: " . round(microtime(true) - $this->lastServerStartTime, 3) . "s");
                 }
-                $this->lastServerStartTime = microtime(true);
 
+                $this->lastServerStartTime = microtime(true);
                 $id = ServerUtils::getFreeId($template);
                 if ($id !== -1) {
-                    $port = ($template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort());
-                    if ($port !== 0) {
-                        $server = new CloudServer($id, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
+                    $port = $template->getTemplateType() === TemplateType::SERVER() ? ServerUtils::getFreePort() : ServerUtils::getFreeProxyPort();
+                    if ($port > 0) {
+                        $uuid = Uuid::uuid4()->toString();
+                        $server = new CloudServer($id, $uuid, $template->getName(), new CloudServerData($port, $template->getSettings()->getMaxPlayerCount(), 0), ServerStatus::STARTING());
                         $this->addToProxies($server);
-                        $server->prepare()->then(fn() => $server->start());
-                        $startedServers[] = $server->getName();
+                        $this->serverPrepareQueue->add($server);
                     }
                 }
             }
         }
-        return $startedServers;
     }
 
     public function stop(Template|CloudServer|ServerGroup|string $object, bool $force = false): bool {
@@ -221,7 +227,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::START_FAILED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::ONLINE() || $server->getServerStatus() === ServerStatus::FULL() || $server->getServerStatus() === ServerStatus::IN_GAME()) {
                 if (!$server->checkAlive()) {
@@ -243,7 +249,7 @@ final class CloudServerManager implements Tickable {
                         NotifyType::TIMED()->send(["%server%" => $server->getName()]);
                     }
 
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                 }
             } else if ($server->getServerStatus() === ServerStatus::STOPPING()) {
                 if (($server->getStopTime() + 10) <= time()) {
@@ -261,7 +267,7 @@ final class CloudServerManager implements Tickable {
                     }
 
                     NotifyType::CRASHED()->send(["%server%" => $server->getName()]);
-                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                    if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
                     TerminalUtils::kill($server->getCloudServerData()->getProcessId());
                 }
             } else if ($server->getServerStatus() === ServerStatus::OFFLINE()) {
@@ -277,9 +283,17 @@ final class CloudServerManager implements Tickable {
                 }
 
                 if (ServerUtils::isProcessRunning($server->getCloudServerData()->getProcessId())) TerminalUtils::kill($server->getCloudServerData()->getProcessId());
-                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectoryAsync($server->getPath());
+                if (!$server->getTemplate()->getSettings()->isStatic()) FileUtils::removeDirectory($server->getPath());
             }
         }
+
+        if (!$this->serverPrepareQueue->isEmpty()) {
+            ($server = $this->serverPrepareQueue->next())->prepare()
+                ->then(fn() => $this->serverStartQueue->add($server))
+                ->failure(fn() => CloudLogger::get()->warn("§cFailed to prepare server §e%s§c.", $server->getName()));
+        }
+
+        if (!$this->serverStartQueue->isEmpty()) $this->serverStartQueue->next()->start();
     }
 
     /** @internal */

@@ -46,6 +46,7 @@ class CloudServer {
 
     public function __construct(
         private readonly int $id,
+        private readonly string $uuid,
         private readonly string $template,
         private readonly CloudServerData $cloudServerData,
         private ServerStatus $serverStatus
@@ -73,7 +74,9 @@ class CloudServer {
         new ServerStartEvent($this)->call();
         CloudLogger::get()->info("§aStarting §b" . $this->getName() . "§r...");
         NotifyType::STARTING()->send(["%server%" => $this->getName()]);
-        ServerUtils::executeWithStartCommand($this->getPath(), $this->getName(), $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
+
+        $screenName = $this->getName() . "-" . $this->getUuid();
+        ServerUtils::executeWithStartCommand($this->getPath(), $screenName, $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
     }
 
     public function stop(bool $force = false): void {
@@ -94,6 +97,13 @@ class CloudServer {
 
     public function getName(): string {
         return $this->template . "-" . $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUuid(): string {
+        return $this->uuid;
     }
 
     public function getId(): int {
@@ -189,7 +199,10 @@ class CloudServer {
     }
 
     public function getPath(): string {
-        return TEMP_PATH . $this->getName() . "/";
+        if ($this->getTemplate()->getSettings()->isStatic()) {
+            return STATIC_PATH . $this->getName() . "/";
+        }
+        return TEMP_PATH . $this->getUuid() . "/";
     }
 
     public function getInternalCloudServerStorage(): InternalCloudServerStorage {
@@ -235,6 +248,7 @@ class CloudServer {
         return [
             "name" => $this->getName(),
             "id" => $this->id,
+            "uuid" => $this->uuid,
             "template" => $this->template,
             "port" => $this->getCloudServerData()->getPort(),
             "maxPlayers" => $this->getCloudServerData()->getMaxPlayers(),
@@ -250,10 +264,11 @@ class CloudServer {
     }
 
     public static function fromArray(array $server): ?self {
-        if (!Utils::containKeys($server, "name", "id", "template", "port", "maxPlayers", "processId", "serverStatus")) return null;
+        if (!Utils::containKeys($server, "name", "id", "uuid", "template", "port", "maxPlayers", "processId", "serverStatus")) return null;
         if (($template = TemplateManager::getInstance()->get($server["template"])) === null) return null;
         return new CloudServer(
             intval($server["id"]),
+            $server["uuid"],
             $template,
             new CloudServerData(intval($server["port"]), intval($server["maxPlayers"]), ($server["processId"] === null ? null : intval($server["processId"]))),
             ServerStatus::get($server["serverStatus"]) ?? ServerStatus::ONLINE()

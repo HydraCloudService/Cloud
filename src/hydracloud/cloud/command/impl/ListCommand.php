@@ -49,6 +49,7 @@ final class ListCommand extends Command {
             foreach (CloudServerManager::getInstance()->getAll() as $server) {
                 $sender->info(
                     "§b" . $server->getName() .
+                    " §8- §rUUID: §b" . $server->getUUID() .
                     " §8- §rPort: §b" . $server->getCloudServerData()->getPort() . " §8| §rIPv6: §b" . $server->getCloudServerData()->getPort()+1 .
                     " §8- §rTemplate: §b" . $server->getTemplate()->getName() .
                     " §8- §rPlayers: §b" . count($server->getCloudPlayers()) . "§8/§b" . $server->getTemplate()->getSettings()->getMaxPlayerCount() . " §8(§b" . $server->getCloudServerData()->getMaxPlayers() . "§8)" .
