@@ -41,7 +41,8 @@ final class PlayerTextPacket extends CloudPacket {
     }
 
     public function handle(ServerClient $client): void {
-        if (($player = CloudPlayerManager::getInstance()->get($this->player)) !== null) {
+        $player = CloudPlayerManager::getInstance()->get($this->player);
+        if ($player !== null) {
             $player->send($this->message, $this->textType);
         } else if ($this->player === "*") {
             foreach (CloudPlayerManager::getInstance()->getAll() as $player) $player->send($this->message, $this->textType);

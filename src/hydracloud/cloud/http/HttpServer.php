@@ -164,7 +164,8 @@ final class HttpServer extends Thread {
 
     public function accept(): ?SocketClient {
         if (!$this->connected) return null;
-        if (($c = @socket_accept($this->socket)) !== false && $c instanceof Socket) {
+        $c = @socket_accept($this->socket);
+        if ($c instanceof Socket) {
             return SocketClient::fromSocket($c);
         }
         return null;
