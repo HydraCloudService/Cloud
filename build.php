@@ -33,8 +33,6 @@ echo "[INFO]: Starting.." . PHP_EOL;
 @mkdir($to, 0777, true);
 cleanDirectory($to);
 // include all important files
-if (is_dir($from . "vendor"))
-    copyDirectory($from . "vendor", $to . "vendor");
 if (is_dir($from . "src"))
     copyDirectory($from . "src", $to . "src/{$NAMESPACE}");
 if (is_file($from . "LICENSE"))
