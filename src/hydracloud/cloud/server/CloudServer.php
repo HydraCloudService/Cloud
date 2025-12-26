@@ -74,7 +74,9 @@ class CloudServer {
         new ServerStartEvent($this)->call();
         CloudLogger::get()->info("§aStarting §b" . $this->getName() . "§r...");
         NotifyType::STARTING()->send(["%server%" => $this->getName()]);
-        ServerUtils::executeWithStartCommand($this->getPath(), $this->getName(), $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
+
+        $screenName = $this->getTemplateName() . "-" . $this->getUuid();
+        ServerUtils::executeWithStartCommand($this->getPath(), $screenName, $this->getTemplate()->getTemplateType()->getSoftware()->getStartCommand());
     }
 
     public function stop(bool $force = false): void {
