@@ -255,7 +255,18 @@ final class ServerUtils {
 
     public static function executeWithStartCommand(string $path, string $name, string $softwareStartCommand): void {
         if (self::$startCommand == "") return;
-        passthru("cd " . $path . " && " . str_replace(["%name%", "%start_command%", "%SOFTWARE_PATH%", "%CLOUD_PATH%"], [$name, $softwareStartCommand, SOFTWARE_PATH, CLOUD_PATH], self::$startCommand));
+        passthru("cd " . $path . " && " . str_replace(
+            [
+                "%name%",
+                "%start_command%",
+                "%SOFTWARE_PATH%",
+                "%CLOUD_PATH%"],
+            [
+                $name,
+                $softwareStartCommand,
+                SOFTWARE_PATH,
+                CLOUD_PATH
+            ], self::$startCommand));
     }
 
     public static function checkTmux(): bool {
