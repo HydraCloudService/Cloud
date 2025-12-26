@@ -59,7 +59,6 @@ abstract class Thread extends NativeThread {
         define("WEB_PATH", STORAGE_PATH . "web/");
         define("LOG_PATH", STORAGE_PATH . "cloud.log");
         define("TEMP_PATH", CLOUD_PATH . "tmp/");
-        define("STATIC_PATH", CLOUD_PATH . "static/");
         define("TEMPLATES_PATH", CLOUD_PATH . "templates/");
         define("SERVER_GROUPS_PATH", CLOUD_PATH . "groups/");
         define("FIRST_RUN", !file_exists(STORAGE_PATH));
