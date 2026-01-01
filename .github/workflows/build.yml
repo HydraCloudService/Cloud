@@ -1,0 +1,43 @@
+name: "Build"
+on:
+  push:
+    branches: [ "**" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: "Create phar file"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.0
+        uses: shivammathur/setup-php@2.12.0
+        with:
+          php-version: 8.2
+          extensions: yaml pcntl
+
+      - name: Composer
+        run: |
+          composer update --no-interaction --ignore-platform-reqs
+          composer install --no-suggest --no-interaction --ignore-platform-reqs
+
+      - name: "Get data"
+        id: metadata
+        run: |
+          echo ::set-output name=VERSION::$(php -r 'echo explode("+", explode("-", yaml_parse_file(getcwd() . DIRECTORY_SEPARATOR . "version.yml")["version"])[0])[0];')
+          echo ::set-output name=FULL_VERSION::$(php -r 'echo yaml_parse_file(getcwd() . DIRECTORY_SEPARATOR .                                "version.yml")["version"];')
+          echo ::set-output name=NAME::$(php -r 'echo yaml_parse_file(getcwd() . DIRECTORY_SEPARATOR .                                                 "version.yml")["name"];')
+
+      - name: "Build phar"
+        run: "php -dphar.readonly=0 build.php"
+
+      - name: "Upload Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "build-${{ steps.metadata.outputs.VERSION }}"
+          path: out/*.phar

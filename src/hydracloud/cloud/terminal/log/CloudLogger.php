@@ -1,0 +1,29 @@
+<?php
+
+namespace hydracloud\cloud\terminal\log;
+
+use hydracloud\cloud\terminal\log\logger\Logger;
+
+final class CloudLogger {
+
+    private static ?Logger $logger = null;
+
+    public static function set(?Logger $logger): void {
+        self::$logger = $logger;
+    }
+
+    public static function get(): Logger {
+        if (self::$logger === null) self::set(new Logger(LOG_PATH));
+        return self::$logger;
+    }
+
+    public static function temp(bool $saveLogs): Logger {
+        $logger = new Logger(LOG_PATH);
+        $logger->setSaveLogs($saveLogs);
+        return $logger;
+    }
+
+    public static function close(): void {
+        self::$logger?->close();
+    }
+}
