@@ -41,7 +41,8 @@ final class HttpServer extends Thread {
 
     public function onRun(): void {
         while ($this->connected) {
-            if ($c = $this->accept()) {
+            $c = $this->accept();
+            if ($c != null) {
                 // thanks JS `fetch` and shoutout to my bro ChatGPT for fixing this shit
                 $request = "";
                 $contentLength = 0;
@@ -166,7 +167,12 @@ final class HttpServer extends Thread {
         if (!$this->connected) return null;
         $c = @socket_accept($this->socket);
         if ($c instanceof Socket) {
-            return SocketClient::fromSocket($c);
+            $socketClient = SocketClient::fromSocket($c);
+            if ($socketClient instanceof SocketClient) {
+                return $socketClient;
+            } else {
+                return null;
+            }
         }
         return null;
     }

@@ -14,9 +14,13 @@ final class SocketClient extends ThreadSafe {
 
     public function __construct(protected Address $address) {}
 
-    public static function fromSocket(Socket $socket): SocketClient {
-        socket_getpeername($socket, $address, $port);
-        $c = new SocketClient(new Address($address, $port));
+    public static function fromSocket(Socket $socket): ?SocketClient {
+        if (!@socket_getpeername($socket, $peerAddress, $peerPort)) {
+            @socket_close($socket);
+            return null;
+        }
+
+        $c = new SocketClient(new Address($peerAddress, $peerPort));
         $c->socket = $socket;
         return $c;
     }
